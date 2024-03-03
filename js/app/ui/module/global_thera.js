@@ -15,7 +15,7 @@ define([
      */
     let TheraModule = class TheraModule extends BaseModule {
         constructor(config = {}) {
-            config.eveScoutUrl = new URL(Init.url.eveScout);
+            config.eveScoutUrl = new URL(Init.url.eveScout.replace('api.', 'www.'));
             super(Object.assign({}, new.target.defaultConfig, config));
         }
 
@@ -36,10 +36,10 @@ define([
             let title = '';
             switch(status){
                 case 'warning':
-                    title = `not in ${this._config.eveScoutUrl.hostname.replace('api.', '')} connections`;
+                    title = `not in ${this._config.eveScoutUrl.hostname.replace('www.', '')} connections`;
                     break;
                 case 'success':
-                    title = `in ${this._config.eveScoutUrl.hostname.replace('api.', '')} connections`;
+                    title = `in ${this._config.eveScoutUrl.hostname.replace('www.', '')} connections`;
                     break;
                 case 'hint':
                     title += `sync connections/signatures`;
@@ -173,6 +173,22 @@ define([
                         }
                     },{
                         targets: 1,
+                        name: 'trueSec',
+                        title: 'sec',
+                        width: 15,
+                        className:'text-center',
+                        data: 'target.trueSec',
+                        defaultContent: module.getIconForUndefinedCellValue(),
+                        render: {
+                            display: (cellData, type, rowData, meta) => {
+                                if(cellData !== undefined){
+                                    let systemTrueSecClass = BaseModule.Util.getTrueSecClassForSystem(cellData);
+                                    return '<span class="' + systemTrueSecClass + '">' + cellData.toFixed(1) + '</span>';
+                                }
+                            }
+                        }
+                    },{
+                        targets: 2,
                         name: 'sourceName',
                         title: 'origin',
                         className: module._config.tableCellEllipsisClass,
@@ -182,7 +198,7 @@ define([
                             _: 'name'
                         }
                     },{
-                        targets: 2,
+                        targets: 3,
                         name: 'systemName',
                         title: 'system',
                         className: module._config.tableCellEllipsisClass,
@@ -202,7 +218,7 @@ define([
                             sort: 'name'
                         }
                     },{
-                        targets: 3,
+                        targets: 4,
                         name: 'region',
                         title: 'region',
                         className: module._config.tableCellEllipsisClass,
@@ -212,7 +228,7 @@ define([
                             _: 'region.name'
                         }
                     },{
-                        targets: 4,
+                        targets: 5,
                         name: 'outSig',
                         title: '<i title="Out signature" data-toggle="tooltip" class="fas fa-sign-out-alt fa-rotate-270"></i>',
                         width: 12,
@@ -220,10 +236,12 @@ define([
                         data: 'sourceSignature',
                         defaultContent: module.getIconForUndefinedCellValue(),
                         render: {
-                            _: 'name'
+                            _: (data, type, row) => {
+                                return data.name ? data.name.substring(0, 3) : ''; 
+                            }
                         }
                     },{
-                        targets: 5,
+                        targets: 6,
                         name: 'fakeConnection',
                         title: 'con.',
                         orderable: false,
@@ -232,7 +250,7 @@ define([
                         data: 'fakeConnection',
                         defaultContent: ''
                     },{
-                        targets: 6,
+                        targets: 7,
                         name: 'inSig',
                         title: '<i title="In signature" data-toggle="tooltip" class="fas fa-sign-in-alt fa-rotate-90"></i>',
                         width: 12,
@@ -240,10 +258,12 @@ define([
                         data: 'targetSignature',
                         defaultContent: module.getIconForUndefinedCellValue(),
                         render: {
-                            _: 'name'
+                            _: (data, type, row) => {
+                                return data.name ? data.name.substring(0, 3) : '';
+                            }
                         }
                     },{
-                        targets: 7,
+                        targets: 8,
                         name: 'wormholeLabel',
                         title: 'type',
                         width: 50,
@@ -264,7 +284,7 @@ define([
                             }
                         }
                     },{
-                        targets: 8,
+                        targets: 9,
                         name: 'estimatedLife',
                         title: '<i title="estimated lifetime" data-toggle="tooltip" class="fas fa-hourglass-start"></i>',
                         width: 15,
@@ -286,7 +306,7 @@ define([
                             sort: dateVal => Date.parse(dateVal)
                         }
                     },{
-                        targets: 9,
+                        targets: 10,
                         name: 'action',
                         title: '',
                         orderable: false,
@@ -453,7 +473,7 @@ define([
                             });
                         }
                     },{
-                        targets: 10,
+                        targets: 11,
                         name: 'rowGroupData',
                         className: 'never',     // never show this column. see: https://datatables.net/extensions/responsive/classes
                         data: 'rowGroupData',
@@ -845,7 +865,7 @@ define([
                     if(!whLabel){
                         whLabel = BaseModule.Util.getObjVal(rowData, 'targetSignature.type') || null;
                     }
-                    
+
                     let massType = BaseModule.Util.getObjVal(Object.assign({}, Init.wormholes[whLabel]), 'size.type');
                     let connectionType = [...rowData.type, massType];
 

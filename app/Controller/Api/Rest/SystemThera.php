@@ -55,7 +55,7 @@ class SystemThera extends AbstractRestController {
         $enrichWithSystemData = function(string $key, array $eveScoutConnection, array &$connectionData) : void {
             // source or target
             $eveScoutSystem = (array)$eveScoutConnection[$key];
-            $universeSystemData = self::getUniverseSystemInfo((int)$eveScoutSystem['id']);
+            $universeSystemData = self::getUniverseSystemInfo((int)$eveScoutSystem['id'])[0];
             $systemData = [
                 'id' => (int)$eveScoutSystem['id'],
                 'name' => (string)$eveScoutSystem['name'],

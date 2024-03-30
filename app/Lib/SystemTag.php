@@ -34,7 +34,7 @@ class SystemTag {
 
     static function nextBookmarks(MapModel $map) : ?string
     {
-        
+
         $systems = $map->getSystemsData();
         $systemClasses = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'];
         $tags = array();
@@ -69,11 +69,11 @@ class SystemTag {
      */
     static function intToTag(int $int): string {
         if($int > 25){
-            $chrCode1 = chr(97 + floor($int / 26) -1);
-            $chrCode2 = chr(97 + $int - (floor($int/26) * 26));
+            $chrCode1 = chr(65 + floor($int / 26) -1);
+            $chrCode2 = chr(65 + $int - (floor($int/26) * 26));
             $tag = "$chrCode1$chrCode2";
         } else {
-            $tag = chr(97 + $int);
+            $tag = chr(65 + $int);
         }
         return $tag;
     }
@@ -85,10 +85,10 @@ class SystemTag {
      */
     static function tagToInt(string $tag): int {
         if (strlen($tag) === 1){
-            $int = ord($tag) - 97;
+            $int = ord($tag) - 65;
         } else {
             $chars = str_split($tag);
-            $int = ((ord($chars[0]) - 96) * 26) + (ord($chars[1]) - 97);
+            $int = ((ord($chars[0]) - 64) * 26) + (ord($chars[1]) - 65);
         }
         return $int;
     }

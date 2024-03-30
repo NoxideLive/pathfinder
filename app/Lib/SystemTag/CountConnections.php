@@ -18,7 +18,7 @@ class CountConnections implements SystemTagInterface
      * @throws \Exception
      */
     static function generateFor(SystemModel $targetSystem, SystemModel $sourceSystem, MapModel $map) : ?string
-    {                       
+    {
         // set target class for new system being added to the map
         $targetClass = $targetSystem->security;
 
@@ -26,12 +26,12 @@ class CountConnections implements SystemTagInterface
         if ($targetClass == '0.0' || $targetClass == 'L') {
             return '';
         }
-        
+
         // Get all systems from active map
         $systems = $map->getSystemsData();
-                
-        // empty array to append tags to,        
-        // iterate over systems and append tag to $tags if security matches targetSystem security 
+
+        // empty array to append tags to,
+        // iterate over systems and append tag to $tags if security matches targetSystem security
         // and it is not our home (locked)
         $tags = array();
         foreach ($systems as $system) {
@@ -40,12 +40,12 @@ class CountConnections implements SystemTagInterface
             }
         };
 
-        // try to assign "s(tatic)" tag to connections from our home by checking if source is locked, 
+        // try to assign "s(tatic)" tag to connections from our home by checking if source is locked,
         // if dest is static, and finally if "static" (513) tag is already taken
         if ($sourceSystem->locked){
             if($targetClass == "C3" || $targetClass == "H" ){
                 if(!in_array(513, $tags)) {
-                    return 'static';
+                    return 'Static';
                 }
             }
         }
@@ -53,24 +53,24 @@ class CountConnections implements SystemTagInterface
         //Skip if HS and not static
         if ($targetClass == 'H') {
             return '';
-        }        
+        }
 
 
 
         // return 'a' if array is empty
-        if (count($tags) === 0) {            
+        if (count($tags) === 0) {
             return 'a';
         }
 
-        // sort and uniq tags array and iterate to return first empty value 
+        // sort and uniq tags array and iterate to return first empty value
         sort($tags);
-        $tags = array_unique($tags);           
+        $tags = array_unique($tags);
         $i = 0;
         while($tags[$i] == $i) {
             $i++;
         }
-        
-        $char = SystemTag::intToTag($i);        
+
+        $char = SystemTag::intToTag($i);
         return $char;
     }
 }

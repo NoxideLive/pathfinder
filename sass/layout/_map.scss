@@ -337,6 +337,7 @@ $mapBubbleWidth:        30px;
         min-width: 50px;
         color: $gray-lighter;
         margin-right: 2px;
+        margin-left: 5px;
         letter-spacing: 0.03em;
         -webkit-font-smoothing: antialiased;
         transform: translateY(0); // fixed "blurry" text in scaled parent

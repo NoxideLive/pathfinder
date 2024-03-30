@@ -448,7 +448,7 @@ define([
                 }).append(
                     $('<span>', {
                         class: [config.systemSec, secClass].join(' '),
-                        text: MapUtil.getSystemSecurityForDisplay(data.security).toLowerCase()
+                        text: MapUtil.getSystemSecurityForDisplay(data.security).toUpperCase()
                     }),
                     $('<span>', {
                         class: [config.systemHeadTagClass, secClass].join(' ')

@@ -801,10 +801,10 @@ define([
                 let staticData = Object.assign({}, Init.wormholes[wormholeName]);
                 let staticEl = Object.assign(document.createElement('span'), {
                     className: [
-                        Util.getSecurityClassForSystem(staticData.security),
+                        Util.getSecurityClassForSystem(staticData.security).toUpperCase(),
                         Util.config.popoverTriggerClass
                     ].join(' '),
-                    textContent: MapUtil.getSystemSecurityForDisplay(staticData.security).toLowerCase()
+                    textContent: MapUtil.getSystemSecurityForDisplay(staticData.security)
                 });
                 staticEl.dataset.name = staticData.name;
                 headInfoRight.push(staticEl);

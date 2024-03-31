@@ -44,7 +44,7 @@ class CountConnections implements SystemTagInterface
         // if dest is static, and finally if "static" (513) tag is already taken
         if ($sourceSystem->locked){
             if($targetClass == "C3" || $targetClass == "H" ){
-                if(!in_array(513, $tags)) {
+                if(!in_array(545, $tags)) {
                     return 'Static';
                 }
             }

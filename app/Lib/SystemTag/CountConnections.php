@@ -41,7 +41,7 @@ class CountConnections implements SystemTagInterface
         };
 
         // try to assign "s(tatic)" tag to connections from our home by checking if source is locked,
-        // if dest is static, and finally if "static" (513) tag is already taken
+        // if dest is static, and finally if "Static" (545) tag is already taken
         if ($sourceSystem->locked){
             if($targetClass == "C3" || $targetClass == "H" ){
                 if(!in_array(545, $tags)) {

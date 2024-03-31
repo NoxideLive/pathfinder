@@ -57,9 +57,9 @@ class CountConnections implements SystemTagInterface
 
 
 
-        // return 'a' if array is empty
+        // return 'A' if array is empty
         if (count($tags) === 0) {
-            return 'a';
+            return 'A';
         }
 
         // sort and uniq tags array and iterate to return first empty value

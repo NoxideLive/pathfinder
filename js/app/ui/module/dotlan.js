@@ -52,7 +52,7 @@ define([                // dependencies for this module
         init(){
             var element = document.getElementById('dotlanIframe');
             if (element) {
-                setTimeout(() => element.style.display = 'inline', 500);
+                setTimeout(() => element.style.display = 'inline', 1000);
             }
             super.init();
         }

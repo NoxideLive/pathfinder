@@ -36,7 +36,8 @@ define([                // dependencies for this module
                 var moduleContent = Object.assign(document.createElement('iframe'), {
                     src: this.dotlanPath(this._systemData),
                     className: 'dotlan-iframe',
-                    style: "width: 100%; height: 650px;"
+                    style: "width: 100%; height: 650px; display: none;",
+                    id: 'dotlanIframe'
                 })
             }
             bodyEl.append(moduleContent)
@@ -49,6 +50,10 @@ define([                // dependencies for this module
          * init module
          */
         init(){
+            var element = document.getElementById('dotlanIframe');
+            if (element) {
+                setTimeout(() => element.style.display = 'inline', 500);
+            }
             super.init();
         }
 

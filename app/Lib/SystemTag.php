@@ -34,7 +34,6 @@ class SystemTag {
 
     static function nextBookmarks(MapModel $map) : ?string
     {
-
         $systems = $map->getSystemsData();
         $systemClasses = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'];
         $tags = array();
@@ -84,10 +83,12 @@ class SystemTag {
      * @return int
      */
     static function tagToInt(string $tag): int {
-        if (strlen($tag) === 1){
-            $int = ord($tag) - 65;
+        $uctag = strtoupper($tag);
+
+        if (strlen($uctag) === 1){
+            $int = ord($uctag) - 65;
         } else {
-            $chars = str_split($tag);
+            $chars = str_split($uctag);
             $int = ((ord($chars[0]) - 64) * 26) + (ord($chars[1]) - 65);
         }
         return $int;

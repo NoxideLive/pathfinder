@@ -27,15 +27,22 @@ class CountConnections implements SystemTagInterface
             return '';
         }
 
+        //Skip home hole
+        $homeId = Config::getPathfinderData('systemtag')['HOME_SYSTEM_ID'];
+        if ($targetSystem->systemId === $homeId) {
+            return '';
+        }
+
         // Get all systems from active map
         $systems = $map->getSystemsData();
 
         // empty array to append tags to,
         // iterate over systems and append tag to $tags if security matches targetSystem security
-        // and it is not our home (locked)
+        // and it is not our home
         $tags = array();
+        
         foreach ($systems as $system) {
-            if ($system->security === $targetClass && !$system->locked && $system->tag) {
+            if ($system->security === $targetClass && $system->systemId !== $homeId && $system->tag) {
                 array_push($tags, SystemTag::tagToInt($system->tag));
             }
         };

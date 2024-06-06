@@ -40,9 +40,9 @@ class SystemTag {
 
         foreach($systemClasses as $systemClass){
             $tagsInUse = array();
-
+            $config = Config::getPathfinderData('systemtag');
             foreach($systems as $system){
-                if($system->security == $systemClass && !$system->locked && gettype($system->tag) == "string"){
+                if($system->security == $systemClass && $system->systemId !== $config['HOME_SYSTEM_ID'] && gettype($system->tag) == "string"){
                     array_push($tagsInUse, SystemTag::tagToInt($system->tag));
                 }
             }
@@ -84,7 +84,6 @@ class SystemTag {
      */
     static function tagToInt(string $tag): int {
         $uctag = strtoupper($tag);
-
         if (strlen($uctag) === 1){
             $int = ord($uctag) - 65;
         } else {

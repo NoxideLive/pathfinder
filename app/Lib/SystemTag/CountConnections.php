@@ -6,6 +6,7 @@ use Exodus4D\Pathfinder\Model\Pathfinder\ConnectionModel;
 use Exodus4D\Pathfinder\Model\Pathfinder\MapModel;
 use Exodus4D\Pathfinder\Model\Pathfinder\SystemModel;
 use Exodus4D\Pathfinder\Model\Universe\AbstractUniverseModel;
+use Exodus4D\Pathfinder\Lib\Config;
 use Exodus4D\Pathfinder\Lib\SystemTag;
 
 class CountConnections implements SystemTagInterface

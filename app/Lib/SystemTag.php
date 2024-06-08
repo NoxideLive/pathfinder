@@ -2,6 +2,7 @@
 
 namespace Exodus4D\Pathfinder\Lib;
 
+use Exodus4D\Pathfinder\Lib\Config;
 use Exodus4D\Pathfinder\Lib\SystemTag\SystemTagInterface;
 use Exodus4D\Pathfinder\Model\Pathfinder\MapModel;
 use Exodus4D\Pathfinder\Model\Pathfinder\SystemModel;

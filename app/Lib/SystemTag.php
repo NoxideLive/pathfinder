@@ -8,6 +8,11 @@ use Exodus4D\Pathfinder\Model\Pathfinder\MapModel;
 use Exodus4D\Pathfinder\Model\Pathfinder\SystemModel;
 
 class SystemTag {
+    const TAG_STATIC = 'Static';
+
+    const INT_STATIC = 1000;
+    const INT_CUSTOM = 1001; 
+
 
     /**
      * @param SystemModel $targetSystem
@@ -68,29 +73,71 @@ class SystemTag {
      * @return string
      */
     static function intToTag(int $int): string {
+        if ($int === self::INT_STATIC) {
+            return self::TAG_STATIC;
+        }
+
+        // tags above 701 are out of bounds of A-ZZ tagging range
+        // this might've been a custom tag, but it
+        // should not have gotten to this part of code;
+        // negative tags are not supported;
+        // this also covers the INT_CUSTOM value
+        if ($int > 701 || $int < 0) {
+            return '?';
+        }
+
         if($int > 25){
+            // above 25 are double-char tags AA-ZZ
             $chrCode1 = chr(65 + floor($int / 26) -1);
             $chrCode2 = chr(65 + $int - (floor($int/26) * 26));
             $tag = "$chrCode1$chrCode2";
         } else {
+            // regular A-Z tags
             $tag = chr(65 + $int);
         }
+
         return $tag;
     }
 
     /**
-     * converts character tag to integer
+     * converts string tag to integer normalized to A=0;
+     * whatever cannot be converted or does not match the A-ZZ bounds, is considered a custom tag
      * @param string $tag
      * @return int
      */
     static function tagToInt(string $tag): int {
+        if ($tag === self::TAG_STATIC) {
+            return self::INT_STATIC;
+        }
+
+        // normalize string to upper
         $uctag = strtoupper($tag);
         if (strlen($uctag) === 1){
             $int = ord($uctag) - 65;
-        } else {
+
+            // character is out of bounds, consider it custom
+            if ($int < 0 || $int > 25){
+                return self::INT_CUSTOM;
+            }
+
+            return $int;
+        } 
+        
+        if (strlen($uctag) === 2) {
             $chars = str_split($uctag);
-            $int = ((ord($chars[0]) - 64) * 26) + (ord($chars[1]) - 65);
-        }
-        return $int;
+            $first = ord($chars[0]) - 65;
+            $second = ord($chars[1]) - 65;
+
+            // either of characters is out of bounds, consider it custom
+            if ($first < 0 || $first > 25 || $second < 0 || $second > 25){
+                return self::INT_CUSTOM;
+            }
+
+            return ($first + 1)*26 + $second;
+        } 
+        
+        
+        // too long or empty, consider it custom
+        return self::INT_CUSTOM;
     }
 }

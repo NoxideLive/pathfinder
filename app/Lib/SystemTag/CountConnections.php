@@ -39,7 +39,7 @@ class CountConnections implements SystemTagInterface
 
         // empty array to append tags to,
         // iterate over systems and append tag to $tags if security matches targetSystem security
-        // and it is not our home
+        // and it is not our home checking by system id
         $tags = array();
         
         foreach ($systems as $system) {
@@ -48,12 +48,12 @@ class CountConnections implements SystemTagInterface
             }
         };
 
-        // try to assign "s(tatic)" tag to connections from our home by checking if source is locked,
-        // if dest is static, and finally if "Static" (545) tag is already taken
-        if ($sourceSystem->locked){
+        // try to assign "s(tatic)" tag to connections from our home by checking by system id,
+        // if dest is static, and finally if "Static" (1000) tag is already taken
+        if ($sourceSystem->systemId === $homeId){
             if($targetClass == "C3" || $targetClass == "H" ){
-                if(!in_array(545, $tags)) {
-                    return 'Static';
+                if(!in_array(SystemTag::INT_STATIC, $tags)) {
+                    return SystemTag::TAG_STATIC;
                 }
             }
         }

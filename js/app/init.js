@@ -396,7 +396,7 @@ define([], () => {
                         {
                             label: '<i class="fas fa-char pf-jump-mass-s" data-char-content="S"></i>',
                             cssClass: ['pf-map-component-overlay', 'small', 'text-center'].join(' '),
-                            location: 0.65,
+                            location: 0.5,
                             id: 'pf-map-connection-jump-mass-overlay'
                         }]
                 ]
@@ -408,7 +408,7 @@ define([], () => {
                         {
                             label: '<i class="fas fa-char pf-jump-mass-m" data-char-content="M"></i>',
                             cssClass: ['pf-map-component-overlay', 'small', 'text-center'].join(' '),
-                            location: 0.65,
+                            location: 0.5,
                             id: 'pf-map-connection-jump-mass-overlay'
                         }]
                 ]
@@ -420,7 +420,7 @@ define([], () => {
                         {
                             label: '<i class="fas fa-char pf-jump-mass-l" data-char-content="L"></i>',
                             cssClass: ['pf-map-component-overlay', 'small', 'text-center'].join(' '),
-                            location: 0.65,
+                            location: 0.5,
                             id: 'pf-map-connection-jump-mass-overlay'
                         }]
                 ]
@@ -432,7 +432,7 @@ define([], () => {
                         {
                             label: '<i class="fas fa-char pf-jump-mass-xl" data-char-content="XL"></i>',
                             cssClass: ['pf-map-component-overlay', 'small', 'text-center'].join(' '),
-                            location: 0.65,
+                            location: 0.5,
                             id: 'pf-map-connection-jump-mass-overlay'
                         }]
                 ]
@@ -449,13 +449,13 @@ define([], () => {
                 ]
             },  
             wh_rolling: {
-                cssClass: 'pf-map-connection-preserve-mass',
+                cssClass: 'pf-map-connection-rolling',
                 overlays: [
                     ['Label',
                         {
                             label: '<i class="fas fa-fw fa-sync-alt"></i>&nbsp;rolling',
                             cssClass: ['pf-map-component-overlay', 'rolling'].join(' '),
-                            location: 0.35
+                            location: 0.65
                         }]
                 ]
             },

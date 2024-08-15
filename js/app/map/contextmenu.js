@@ -104,7 +104,7 @@ define([
             items: [
                 {icon: 'fa-hourglass-end', action: 'wh_eol', text: 'toggle EOL'},
                 {icon: 'fa-exclamation-triangle', action: 'preserve_mass', text: 'preserve mass'},
-                {icon: 'fa-arrows-rotate', action: 'wh_rolling', text: 'rolling'},
+                {icon: 'fa-sync-alt', action: 'wh_rolling', text: 'rolling'},
                 {icon: 'fa-reply fa-rotate-180', action: 'change_status', text: 'mass status', subitems: [
                         {subIcon: 'fa-circle', subIconClass: 'txt-color txt-color-gray', subAction: 'status_fresh', subText: 'stage 1 (fresh)'},
                         {subIcon: 'fa-circle', subIconClass: 'txt-color txt-color-orange', subAction: 'status_reduced', subText: 'stage 2 (reduced)'},

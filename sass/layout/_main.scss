@@ -1497,7 +1497,8 @@ table{
   &.pf-map-connection-wh-size-m,
   &.pf-map-connection-wh-size-l,
   &.pf-map-connection-wh-size-xl,
-  &.pf-map-connection-preserve-mass{
+  &.pf-map-connection-preserve-mass,
+  &.pf-map-connection-rolling{
     &:after{
       content: '?';
       background-color: $gray;
@@ -1550,6 +1551,16 @@ table{
 
     &:after{
       content: 'save mass';
+      background-color: $red-dark;
+      color: $gray-lightest;
+      left: calc(50% - 28px);
+    }
+  }
+  
+  &.pf-map-connection-rolling{
+
+    &:after{
+      content: 'rolling';
       background-color: $red-dark;
       color: $gray-lightest;
       left: calc(50% - 28px);

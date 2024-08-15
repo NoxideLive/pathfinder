@@ -763,8 +763,9 @@ define([
                     }
                 });
                 break;
-            case 'preserve_mass':   // set "preserve mass
-            case 'wh_eol':          // set "end of life"
+                case 'wh_rolling':   // set "rolling"
+                case 'preserve_mass':   // set "preserve mass
+                case 'wh_eol':          // set "end of life"
                 MapOverlayUtil.getMapOverlay(mapElement, 'timer').startMapUpdateCounter();
                 MapUtil.toggleConnectionType(connection, action);
                 MapUtil.markAsChanged(connection);
@@ -1054,7 +1055,7 @@ define([
         }
 
         // check for unhandled connection type changes ----------------------------------------------------------------
-        let allToggleTypes = ['wh_eol', 'preserve_mass'];
+        let allToggleTypes = ['wh_eol', 'preserve_mass', 'wh_rolling'];
         let newTypes = allToggleTypes.intersect(newConnectionData.type.diff(currentConnectionData.type));
         let oldTypes = allToggleTypes.intersect(currentConnectionData.type.diff(newConnectionData.type));
 
@@ -1882,6 +1883,7 @@ define([
             if(scope === 'abyssal'){
                 options.hidden.push('wh_eol');
                 options.hidden.push('preserve_mass');
+                options.hidden.push('wh_rolling');
                 options.hidden.push('change_status');
                 options.hidden.push('wh_jump_mass_change');
 
@@ -1890,6 +1892,7 @@ define([
             }else if(scope === 'stargate'){
                 options.hidden.push('wh_eol');
                 options.hidden.push('preserve_mass');
+                options.hidden.push('wh_rolling');
                 options.hidden.push('change_status');
                 options.hidden.push('wh_jump_mass_change');
 
@@ -1897,6 +1900,7 @@ define([
             }else if(scope === 'jumpbridge'){
                 options.hidden.push('wh_eol');
                 options.hidden.push('preserve_mass');
+                options.hidden.push('wh_rolling');
                 options.hidden.push('change_status');
                 options.hidden.push('wh_jump_mass_change');
 
@@ -1911,6 +1915,9 @@ define([
             }
             if(connection.hasType('preserve_mass') === true){
                 options.active.push('preserve_mass');
+            }
+            if(connection.hasType('wh_rolling') === true){
+                options.active.push('wh_rolling')
             }
             for(let sizeName of Object.keys(Init.wormholeSizes)){
                 if(connection.hasType(sizeName)){

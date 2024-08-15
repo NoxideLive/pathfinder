@@ -115,7 +115,8 @@ class ConnectionModel extends AbstractMapTrackingModel {
         'wh_jump_mass_xl',
         // other types
         'wh_eol',
-        'preserve_mass'
+        'preserve_mass',
+        'wh_rolling'
     ];
 
     /**

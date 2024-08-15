@@ -447,6 +447,17 @@ define([], () => {
                             location: 0.35
                         }]
                 ]
+            },  
+            wh_rolling: {
+                cssClass: 'pf-map-connection-preserve-mass',
+                overlays: [
+                    ['Label',
+                        {
+                            label: '<i class="fas fa-fw fa-sync-alt"></i>&nbsp;rolling',
+                            cssClass: ['pf-map-component-overlay', 'rolling'].join(' '),
+                            location: 0.35
+                        }]
+                ]
             },
             info_signature: {
                 overlays: [

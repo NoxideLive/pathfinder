@@ -442,7 +442,7 @@ define([
             system = $('<div>', {
                 id: systemId,
                 class: config.systemClass
-            }).append(
+            }).attr('oncontextmenu', 'return false;').append(
                 $('<div>', {
                     class: config.systemHeadClass
                 }).append(

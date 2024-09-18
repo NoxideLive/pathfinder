@@ -1203,7 +1203,7 @@ define([
                 let mapContainer = $('<div>', {
                     id: config.mapIdPrefix + mapId,
                     class: Util.config.mapClass
-                }).data('id', mapId);
+                }).attr('oncontextmenu', 'return false;').data('id', mapId);
 
                 areaMap.append(mapContainer);
 

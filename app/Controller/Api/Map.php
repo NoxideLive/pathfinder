@@ -942,10 +942,10 @@ class Map extends Controller\AccessController {
                                 if(
                                     (
                                         'station' == $character->cloneLocationType &&
-                                        $character->cloneLocationId == $targetLog->stationId
+                                        $character->cloneLocationId == $sourceLog->stationId
                                     ) || (
                                         'structure' == $character->cloneLocationType &&
-                                        $character->cloneLocationId == $targetLog->structureId
+                                        $character->cloneLocationId == $sourceLog->structureId
                                     )
                                 ){
                                     // .. now we need to check jump distance between systems

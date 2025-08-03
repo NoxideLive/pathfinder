@@ -1122,19 +1122,19 @@ define([
     };
 
     /**
-     * clean up tracking state for closed tabs
+     * clean up tracking state for closed/crashed tabs using heartbeat system
      */
     let cleanupTrackingState = () => {
-        let state = Util.getCharacterTrackingState();
-        let currentTabId = Util.getBrowserTabId();
+        // Initialize heartbeat for current tab
+        Util.updateTabHeartbeat();
         
-        // Keep only current tab in state (other tabs will add themselves when they load)
-        let cleanState = {};
-        if (state[currentTabId]) {
-            cleanState[currentTabId] = state[currentTabId];
-        }
+        // Clean up dead tabs
+        Util.cleanupDeadTabs();
         
-        Util.setCharacterTrackingState(cleanState);
+        // Start heartbeat interval
+        setInterval(() => {
+            Util.updateTabHeartbeat();
+        }, 10000); // Update every 10 seconds
     };
 
     /**
@@ -1170,6 +1170,26 @@ define([
         // Listen for tracking changes
         $(document).off('pf:updateCharacterTracking').on('pf:updateCharacterTracking', () => {
             updateCharacterTrackingCounter();
+        });
+        
+        // Listen for character switch events to handle conflicts
+        $(document).off('pf:beforeCharacterSwitch').on('pf:beforeCharacterSwitch', (e, data) => {
+            if(data.characterId) {
+                let conflict = Util.handleCharacterSwitchConflict(data.characterId);
+                if(conflict.hadConflict) {
+                    Util.showNotify({
+                        title: 'Character Tracking',
+                        text: conflict.message,
+                        type: 'info'
+                    });
+                }
+            }
+        });
+        
+        // Handle page unload to clean up heartbeat
+        $(window).on('beforeunload', () => {
+            // Note: We can't remove the heartbeat here because beforeunload
+            // doesn't guarantee execution. The heartbeat will naturally expire.
         });
     };
 

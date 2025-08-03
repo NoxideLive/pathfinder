@@ -1,6 +1,6 @@
 # Multi-Character Tracking
 
-The Multi-Character Tracking feature allows users to monitor multiple characters from a single browser tab, eliminating the need to keep multiple tabs open for character tracking. This feature provides a centralized character management interface with cross-tab coordination.
+The Multi-Character Tracking feature allows users to monitor multiple characters from a single browser tab, eliminating the need to keep multiple tabs open for character tracking. This feature provides a centralized character management interface with cross-tab coordination and robust tab lifecycle management.
 
 ## Table of Contents
 
@@ -8,11 +8,13 @@ The Multi-Character Tracking feature allows users to monitor multiple characters
   - [How to Use](#how-to-use)
   - [Visual Indicators](#visual-indicators)
   - [Cross-Tab Coordination](#cross-tab-coordination)
+  - [Tab Lifecycle Management](#tab-lifecycle-management)
 - [Technical Implementation](#technical-implementation)
   - [Architecture Overview](#architecture-overview)
   - [File Structure](#file-structure)
   - [Data Flow](#data-flow)
   - [Storage System](#storage-system)
+  - [Heartbeat System](#heartbeat-system)
 - [Developer Guide](#developer-guide)
   - [Key Components](#key-components)
   - [API Reference](#api-reference)
@@ -42,17 +44,37 @@ The system prevents tracking conflicts by:
 - Detecting when a character is tracked in another browser tab
 - Disabling the tracking checkbox for characters already tracked elsewhere
 - Providing visual feedback with tooltips explaining why a checkbox is disabled
-- Automatically cleaning up tracking state when tabs are closed
+- Automatically handling character switching conflicts with smart resolution
+
+### Tab Lifecycle Management
+
+The enhanced system now handles complex scenarios:
+
+#### Tab Closing
+- **Heartbeat System**: Each tab sends periodic "heartbeat" signals to indicate it's still active
+- **Automatic Cleanup**: When a tab is closed, its heartbeat stops and the tracking state is automatically cleaned up
+- **No Impact on Other Tabs**: Closing one tab doesn't affect tracking state in other open tabs
+
+#### Browser Crashes
+- **Orphan Detection**: When the browser restarts, the system detects "orphaned" tracking states from crashed tabs
+- **Smart Recovery**: Old tracking states are automatically removed based on heartbeat timestamps
+- **State Preservation**: Current session tracking state is preserved and restored properly
+
+#### Character Switching Conflicts
+- **Conflict Detection**: When switching to a character tracked in another tab, the system detects the conflict
+- **Automatic Resolution**: Tracking is automatically transferred from the other tab to the current tab
+- **User Notification**: Users receive informative notifications about conflict resolution
 
 ## Technical Implementation
 
 ### Architecture Overview
 
-The multi-character tracking system is built on three core components:
+The multi-character tracking system is built on four core components:
 
 1. **UI Layer**: Enhanced character switcher popover with tracking checkboxes
 2. **State Management**: localStorage-based persistence with tab-specific keys
 3. **Event System**: Real-time updates and cross-component communication
+4. **Heartbeat System**: Tab lifecycle management and automatic cleanup
 
 ### File Structure
 
@@ -69,40 +91,71 @@ public/templates/
 
 ```
 1. Page Load
+   ├── Initialize heartbeat system
+   ├── Clean up dead tab states
    ├── Initialize current character tracking
-   ├── Clean up closed tab states
    └── Update tracking counter
 
 2. Character Switcher Popover
    ├── Render tracking checkboxes
    ├── Check cross-tab conflicts
    ├── Handle checkbox changes
-   └── Trigger tracking updates
+   ├── Trigger tracking updates
+   └── Handle character switching conflicts
 
 3. State Management
-   ├── Store per-tab character lists
+   ├── Store per-tab character lists with metadata
    ├── Coordinate across browser tabs
-   └── Persist to localStorage
+   ├── Persist to localStorage
+   └── Maintain heartbeat timestamps
+
+4. Tab Lifecycle
+   ├── Send periodic heartbeat signals
+   ├── Detect inactive/closed tabs
+   ├── Clean up orphaned states
+   └── Handle conflict resolution
 ```
 
 ### Storage System
 
-The tracking state is stored in localStorage using the following structure:
+The tracking state is stored in localStorage using the following enhanced structure:
 
 ```javascript
 // localStorage key: 'pf-character-tracking'
 {
-  "tab_123456": [1001, 1002, 1003],  // Tab ID -> Character IDs array
-  "tab_789012": [1004, 1005],
-  // ... other tabs
+  "tab_123456": {
+    "characters": [1001, 1002, 1003],
+    "currentCharacter": 1001,
+    "lastUpdate": 1632150000000
+  },
+  "tab_789012": {
+    "characters": [1004, 1005],
+    "currentCharacter": 1004,
+    "lastUpdate": 1632150030000
+  }
+}
+
+// localStorage key: 'pf-tab-heartbeats'
+{
+  "tab_123456": 1632150045000,  // Last heartbeat timestamp
+  "tab_789012": 1632150048000
 }
 ```
 
+### Heartbeat System
+
 **Key Features:**
-- Tab-specific storage prevents conflicts
-- Automatic cleanup on page load
-- Cross-tab state coordination
-- Fallback error handling
+- **Periodic Updates**: Each tab updates its heartbeat every 10 seconds
+- **Activity Detection**: Tabs are considered active if heartbeat is within 30 seconds
+- **Automatic Cleanup**: Dead tabs are cleaned up automatically on page load and periodically
+- **Conflict Resolution**: Character switching conflicts are resolved automatically
+
+**Key Features:**
+- Tab-specific storage with metadata prevents conflicts
+- Heartbeat-based lifecycle management for robust cleanup
+- Cross-tab state coordination with conflict resolution
+- Automatic orphan detection and cleanup
+- Fallback error handling for all edge cases
 
 ## Developer Guide
 
@@ -127,9 +180,31 @@ setTrackedCharacters(characterIds) -> void
 
 // Check if character is tracked elsewhere
 isCharacterTrackedElsewhere(characterId) -> boolean
+
+// Handle character switching conflicts
+handleCharacterSwitchConflict(characterId) -> Object
 ```
 
-#### 2. UI Integration (page.js)
+#### 2. Heartbeat System (util.js)
+
+Tab lifecycle management functions:
+
+```javascript
+// Get/Set heartbeat state
+getTabHeartbeatState() -> Object
+setTabHeartbeatState(state) -> void
+
+// Update current tab heartbeat
+updateTabHeartbeat() -> void
+
+// Get list of active tabs
+getActiveTabs(maxAge) -> Array
+
+// Clean up dead tabs
+cleanupDeadTabs() -> void
+```
+
+#### 3. UI Integration (page.js)
 
 Main page controller functions:
 
@@ -137,14 +212,14 @@ Main page controller functions:
 // Initialize tracking for current character
 initializeCharacterTracking() -> void
 
-// Clean up tracking state from closed tabs
+// Clean up tracking state using heartbeat system
 cleanupTrackingState() -> void
 
 // Update header tracking counter
 updateCharacterTrackingCounter() -> void
 ```
 
-#### 3. Popover Enhancement (character_switch.html)
+#### 4. Popover Enhancement (character_switch.html)
 
 Template structure with tracking column:
 
@@ -180,12 +255,30 @@ Template structure with tracking column:
 
 **`Util.setTrackedCharacters(characterIds)`**
 - Parameters: `characterIds` (Array) - Character IDs to track
-- Description: Updates tracked characters for current tab
+- Description: Updates tracked characters for current tab with metadata
 
 **`Util.isCharacterTrackedElsewhere(characterId)`**
 - Parameters: `characterId` (Number) - Character ID to check
-- Returns: `boolean` - True if character is tracked in another tab
-- Description: Checks for cross-tab tracking conflicts
+- Returns: `boolean` - True if character is tracked in another active tab
+- Description: Checks for cross-tab tracking conflicts using heartbeat data
+
+**`Util.handleCharacterSwitchConflict(characterId)`**
+- Parameters: `characterId` (Number) - Character ID being switched to
+- Returns: `Object` - Conflict resolution result
+- Description: Automatically resolves character switching conflicts
+
+#### Heartbeat System Functions
+
+**`Util.updateTabHeartbeat()`**
+- Description: Updates heartbeat timestamp for current tab
+
+**`Util.getActiveTabs(maxAge)`**
+- Parameters: `maxAge` (Number) - Maximum age in milliseconds (default: 30000)
+- Returns: `Array` - List of active tab IDs
+- Description: Gets tabs that have recent heartbeat activity
+
+**`Util.cleanupDeadTabs()`**
+- Description: Removes tracking data for tabs without recent heartbeats
 
 #### Event System
 
@@ -198,6 +291,94 @@ Template structure with tracking column:
 $(document).on('pf:updateCharacterTracking', () => {
     // Handle tracking update
     updateCharacterTrackingCounter();
+});
+```
+
+**`pf:beforeCharacterSwitch`**
+- Type: jQuery custom event
+- Trigger: Before character switching occurs
+- Usage: Handle character switching conflicts
+
+```javascript
+$(document).on('pf:beforeCharacterSwitch', (e, data) => {
+    // Handle character switch conflict
+    let conflict = Util.handleCharacterSwitchConflict(data.characterId);
+});
+```
+
+### Extending the Feature
+
+#### Adding New Tracking Metadata
+
+To add additional metadata to the tracking state:
+
+```javascript
+// In setTrackedCharacters function
+state[tabId].characters = characterIds;
+state[tabId].currentCharacter = currentCharacterId;
+state[tabId].lastUpdate = Date.now();
+state[tabId].customMetadata = yourData; // Add your metadata here
+```
+
+#### Customizing Heartbeat Intervals
+
+To adjust heartbeat timing:
+
+```javascript
+// In cleanupTrackingState function
+setInterval(() => {
+    Util.updateTabHeartbeat();
+}, 5000); // Change from 10000 to 5000 for 5-second intervals
+```
+
+#### Adding Custom Conflict Resolution
+
+To implement custom conflict resolution logic:
+
+```javascript
+// Override handleCharacterSwitchConflict function
+let customHandleConflict = (characterId) => {
+    // Your custom logic here
+    return {
+        hadConflict: false,
+        message: 'Custom resolution applied'
+    };
+};
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue**: Tracking counter not updating
+- **Cause**: Event listener not properly attached
+- **Solution**: Ensure `initializeCharacterTracking()` is called on page load
+
+**Issue**: Characters appear tracked elsewhere when they shouldn't be
+- **Cause**: Dead tab states not cleaned up
+- **Solution**: Check that heartbeat system is running and cleanup function is called
+
+**Issue**: Browser crash recovery not working
+- **Cause**: localStorage corruption or heartbeat data missing
+- **Solution**: Clear localStorage or implement additional fallback mechanisms
+
+### Debugging
+
+Enable debug logging:
+
+```javascript
+// Add to tracking functions
+console.log('Tracking state:', Util.getCharacterTrackingState());
+console.log('Active tabs:', Util.getActiveTabs());
+console.log('Heartbeats:', Util.getTabHeartbeatState());
+```
+
+### Performance Considerations
+
+- Heartbeat updates occur every 10 seconds to balance responsiveness and performance
+- localStorage operations are wrapped in try-catch for error handling
+- Active tab detection uses 30-second timeout to prevent false positives
+- Dead tab cleanup runs on page load and during heartbeat intervals
 });
 ```
 

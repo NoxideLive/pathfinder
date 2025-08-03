@@ -607,6 +607,9 @@ define([
             // init all tooltips
             initHeaderTooltips($('#' + config.pageHeaderId));
 
+            // clean up tracking state from any closed tabs
+            cleanupTrackingState();
+
             resolve({
                 action: 'loadHeader',
                 data: {
@@ -1119,6 +1122,36 @@ define([
     };
 
     /**
+     * clean up tracking state for closed tabs
+     */
+    let cleanupTrackingState = () => {
+        let state = Util.getCharacterTrackingState();
+        let currentTabId = Util.getBrowserTabId();
+        
+        // Keep only current tab in state (other tabs will add themselves when they load)
+        let cleanState = {};
+        if (state[currentTabId]) {
+            cleanState[currentTabId] = state[currentTabId];
+        }
+        
+        Util.setCharacterTrackingState(cleanState);
+    };
+
+    /**
+     * update character tracking counter in header
+     */
+    let updateCharacterTrackingCounter = () => {
+        let trackedCharacters = Util.getTrackedCharacters();
+        let counterElement = $('.pf-character-tracking-count');
+        
+        if (trackedCharacters.length > 1) {
+            counterElement.text(trackedCharacters.length).show();
+        } else {
+            counterElement.hide();
+        }
+    };
+
+    /**
      * initialize character tracking for current character
      */
     let initializeCharacterTracking = () => {
@@ -1130,6 +1163,14 @@ define([
                 Util.setTrackedCharacters(trackedCharacters);
             }
         }
+        
+        // Update counter
+        updateCharacterTrackingCounter();
+        
+        // Listen for tracking changes
+        $(document).off('pf:updateCharacterTracking').on('pf:updateCharacterTracking', () => {
+            updateCharacterTrackingCounter();
+        });
     };
 
     /**

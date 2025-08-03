@@ -616,6 +616,11 @@ define([
         let eventNamespace = 'hideCharacterPopup';
 
         requirejs(['text!templates/tooltip/character_switch.html', 'mustache'], function(template, Mustache){
+            
+            // Add image to current character
+            if(userData.character && userData.character.id){
+                userData.character.image = eveImageUrl('characters', userData.character.id);
+            }
 
             let data = {
                 popoverClass: config.popoverCharacterClass,
@@ -667,6 +672,49 @@ define([
                                 // close popover
                                 $('body').click();
                             });
+                            
+                            // Initialize tracking checkboxes
+                            let trackedCharacters = getTrackedCharacters();
+                            let checkboxes = tmpPopupElement.find('.pf-character-tracking-checkbox');
+                            
+                            checkboxes.each(function() {
+                                let checkbox = $(this);
+                                let characterId = parseInt(checkbox.data('character-id'));
+                                
+                                // Set initial state
+                                checkbox.prop('checked', trackedCharacters.includes(characterId));
+                                
+                                // Check if character is tracked elsewhere and disable if so
+                                if (isCharacterTrackedElsewhere(characterId)) {
+                                    checkbox.prop('disabled', true);
+                                    checkbox.closest('tr').addClass('text-muted');
+                                    checkbox.attr('title', 'Character is being tracked in another tab');
+                                }
+                            });
+                            
+                            // Handle checkbox change events
+                            checkboxes.on('change', function() {
+                                let checkbox = $(this);
+                                let characterId = parseInt(checkbox.data('character-id'));
+                                let isChecked = checkbox.prop('checked');
+                                
+                                let trackedCharacters = getTrackedCharacters();
+                                
+                                if (isChecked && !trackedCharacters.includes(characterId)) {
+                                    trackedCharacters.push(characterId);
+                                } else if (!isChecked && trackedCharacters.includes(characterId)) {
+                                    trackedCharacters = trackedCharacters.filter(id => id !== characterId);
+                                }
+                                
+                                setTrackedCharacters(trackedCharacters);
+                                
+                                // Trigger tracking update event
+                                $(document).trigger('pf:updateCharacterTracking', {
+                                    characterId: characterId,
+                                    isTracked: isChecked,
+                                    trackedCharacters: trackedCharacters
+                                });
+                            });
                         });
 
                         // init popover and add specific class to it (for styling)
@@ -688,6 +736,16 @@ define([
                         // set click events. This is required to pass data to "beforeunload" events
                         // -> there is no way to identify the target within that event
                         popoverElement.on('click', '.btn', function(){
+                            let characterId = $(this).attr('href') ? 
+                                new URLSearchParams($(this).attr('href').split('?')[1]).get('characterId') : null;
+                            
+                            if(characterId && characterId !== '-1') {
+                                // Trigger beforeCharacterSwitch event for conflict handling
+                                $(document).trigger('pf:beforeCharacterSwitch', {
+                                    characterId: parseInt(characterId)
+                                });
+                            }
+                            
                             // character switch detected
                             $('body').data('characterSwitch', true);
                             // ... and remove "characterSwitch" data again! after "unload"
@@ -703,6 +761,28 @@ define([
                             button.popover('show');
                             popoverElement.initTooltips();
                             popoverElement.velocity('transition.' + easeEffect, velocityOptions);
+                            
+                            // Update tracking checkboxes when shown again
+                            let trackedCharacters = getTrackedCharacters();
+                            let checkboxes = popoverElement.find('.pf-character-tracking-checkbox');
+                            
+                            checkboxes.each(function() {
+                                let checkbox = $(this);
+                                let characterId = parseInt(checkbox.data('character-id'));
+                                
+                                // Update state
+                                checkbox.prop('checked', trackedCharacters.includes(characterId));
+                                
+                                // Check if character is tracked elsewhere
+                                let trackedElsewhere = isCharacterTrackedElsewhere(characterId);
+                                checkbox.prop('disabled', trackedElsewhere);
+                                checkbox.closest('tr').toggleClass('text-muted', trackedElsewhere);
+                                if (trackedElsewhere) {
+                                    checkbox.attr('title', 'Character is being tracked in another tab');
+                                } else {
+                                    checkbox.attr('title', 'track character');
+                                }
+                            });
                         }
                     }
                 });
@@ -952,8 +1032,8 @@ define([
      * @returns {String}
      */
     const unicodeToString = (text) => {
-        const result = text.replace(/\\u[\dA-F]{4}/gi, (match) => String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16)))
-        return result.substring(0, 2) == "u'" ? result.substring(2, result.length - 1) : result;
+        const result = text.replace(/\\u[\dA-F]{4}/gi, (match) => String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16)));
+        return result.substring(0, 2) === 'u\'' ? result.substring(2, result.length - 1) : result;
     };
 
     /**
@@ -2525,7 +2605,7 @@ define([
      * @returns {string}
      */
     let getSystemPlanetsTable = planets => {
-        if(!planets) return '<table></table>'
+        if(!planets) return '<table></table>';
         let table = '';
         if(planets.length > 0){
             let regex = /\(([^)]+)\)/;
@@ -3692,6 +3772,211 @@ define([
         return '';
     };
 
+    /**
+     * get multi-character tracking state from localStorage
+     * @returns {Object}
+     */
+    let getCharacterTrackingState = () => {
+        let state = {};
+        try {
+            state = JSON.parse(localStorage.getItem('pf-character-tracking') || '{}');
+        } catch(e) {
+            console.warn('Failed to parse character tracking state:', e);
+        }
+        return state;
+    };
+
+    /**
+     * save multi-character tracking state to localStorage
+     * @param {Object} state
+     */
+    let setCharacterTrackingState = (state) => {
+        try {
+            localStorage.setItem('pf-character-tracking', JSON.stringify(state));
+        } catch(e) {
+            console.warn('Failed to save character tracking state:', e);
+        }
+    };
+
+    /**
+     * get tab heartbeat state from localStorage
+     * @returns {Object}
+     */
+    let getTabHeartbeatState = () => {
+        let state = {};
+        try {
+            state = JSON.parse(localStorage.getItem('pf-tab-heartbeats') || '{}');
+        } catch(e) {
+            console.warn('Failed to parse tab heartbeat state:', e);
+        }
+        return state;
+    };
+
+    /**
+     * save tab heartbeat state to localStorage
+     * @param {Object} state
+     */
+    let setTabHeartbeatState = (state) => {
+        try {
+            localStorage.setItem('pf-tab-heartbeats', JSON.stringify(state));
+        } catch(e) {
+            console.warn('Failed to save tab heartbeat state:', e);
+        }
+    };
+
+    /**
+     * update heartbeat for current tab
+     */
+    let updateTabHeartbeat = () => {
+        let heartbeats = getTabHeartbeatState();
+        let tabId = getBrowserTabId();
+        heartbeats[tabId] = Date.now();
+        setTabHeartbeatState(heartbeats);
+    };
+
+    /**
+     * get list of active tabs based on recent heartbeats
+     * @param {number} maxAge - Maximum age in milliseconds (default: 30 seconds)
+     * @returns {Array}
+     */
+    let getActiveTabs = (maxAge = 30000) => {
+        let heartbeats = getTabHeartbeatState();
+        let currentTime = Date.now();
+        let activeTabs = [];
+        
+        for(let tabId in heartbeats) {
+            if(currentTime - heartbeats[tabId] < maxAge) {
+                activeTabs.push(tabId);
+            }
+        }
+        
+        return activeTabs;
+    };
+
+    /**
+     * clean up tracking state for inactive/closed tabs
+     */
+    let cleanupDeadTabs = () => {
+        let trackingState = getCharacterTrackingState();
+        let heartbeatState = getTabHeartbeatState();
+        let activeTabs = getActiveTabs();
+        let currentTabId = getBrowserTabId();
+        
+        // Always keep current tab as active
+        if(!activeTabs.includes(currentTabId)) {
+            activeTabs.push(currentTabId);
+        }
+        
+        // Remove tracking data for inactive tabs
+        let cleanedTrackingState = {};
+        activeTabs.forEach(tabId => {
+            if(trackingState[tabId]) {
+                cleanedTrackingState[tabId] = trackingState[tabId];
+            }
+        });
+        
+        // Remove heartbeats for inactive tabs
+        let cleanedHeartbeatState = {};
+        activeTabs.forEach(tabId => {
+            if(heartbeatState[tabId]) {
+                cleanedHeartbeatState[tabId] = heartbeatState[tabId];
+            }
+        });
+        
+        setCharacterTrackingState(cleanedTrackingState);
+        setTabHeartbeatState(cleanedHeartbeatState);
+    };
+
+    /**
+     * get tracked characters for current tab
+     * @returns {Array}
+     */
+    let getTrackedCharacters = () => {
+        let state = getCharacterTrackingState();
+        let tabId = getBrowserTabId();
+        return state[tabId] ? state[tabId].characters || [] : [];
+    };
+
+    /**
+     * update tracked characters for current tab
+     * @param {Array} characterIds
+     */
+    let setTrackedCharacters = (characterIds) => {
+        let state = getCharacterTrackingState();
+        let tabId = getBrowserTabId();
+        let currentCharacterId = getCurrentCharacterData('id');
+        
+        if(!state[tabId]) {
+            state[tabId] = {};
+        }
+        
+        state[tabId].characters = characterIds;
+        state[tabId].currentCharacter = currentCharacterId;
+        state[tabId].lastUpdate = Date.now();
+        
+        setCharacterTrackingState(state);
+        updateTabHeartbeat();
+    };
+
+    /**
+     * check if character is tracked in another tab
+     * @param {number} characterId
+     * @returns {boolean}
+     */
+    let isCharacterTrackedElsewhere = (characterId) => {
+        let state = getCharacterTrackingState();
+        let currentTabId = getBrowserTabId();
+        let activeTabs = getActiveTabs();
+        
+        for(let tabId of activeTabs) {
+            if(tabId !== currentTabId && state[tabId] && state[tabId].characters) {
+                if(state[tabId].characters.includes(characterId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
+    /**
+     * handle character switching conflicts
+     * @param {number} newCharacterId
+     * @returns {Object} conflict resolution result
+     */
+    let handleCharacterSwitchConflict = (newCharacterId) => {
+        let state = getCharacterTrackingState();
+        let currentTabId = getBrowserTabId();
+        let activeTabs = getActiveTabs();
+        let conflictingTab = null;
+        
+        // Find which tab is tracking this character
+        for(let tabId of activeTabs) {
+            if(tabId !== currentTabId && state[tabId] && state[tabId].characters) {
+                if(state[tabId].characters.includes(newCharacterId)) {
+                    conflictingTab = tabId;
+                    break;
+                }
+            }
+        }
+        
+        if(conflictingTab) {
+            // Remove character from conflicting tab
+            state[conflictingTab].characters = state[conflictingTab].characters.filter(id => id !== newCharacterId);
+            setCharacterTrackingState(state);
+            
+            return {
+                hadConflict: true,
+                resolvedTab: conflictingTab,
+                message: 'Character tracking transferred from another tab'
+            };
+        }
+        
+        return {
+            hadConflict: false,
+            message: 'No conflict detected'
+        };
+    };
+
     return {
         config: config,
         getVersion: getVersion,
@@ -3799,6 +4084,17 @@ define([
         redirect: redirect,
         logout: logout,
         setCookie: setCookie,
-        getCookie: getCookie
+        getCookie: getCookie,
+        getCharacterTrackingState: getCharacterTrackingState,
+        setCharacterTrackingState: setCharacterTrackingState,
+        getTabHeartbeatState: getTabHeartbeatState,
+        setTabHeartbeatState: setTabHeartbeatState,
+        updateTabHeartbeat: updateTabHeartbeat,
+        getActiveTabs: getActiveTabs,
+        cleanupDeadTabs: cleanupDeadTabs,
+        getTrackedCharacters: getTrackedCharacters,
+        setTrackedCharacters: setTrackedCharacters,
+        isCharacterTrackedElsewhere: isCharacterTrackedElsewhere,
+        handleCharacterSwitchConflict: handleCharacterSwitchConflict
     };
 });

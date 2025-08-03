@@ -607,6 +607,9 @@ define([
             // init all tooltips
             initHeaderTooltips($('#' + config.pageHeaderId));
 
+            // clean up tracking state from any closed tabs
+            cleanupTrackingState();
+
             resolve({
                 action: 'loadHeader',
                 data: {
@@ -1119,6 +1122,78 @@ define([
     };
 
     /**
+     * clean up tracking state for closed/crashed tabs using heartbeat system
+     */
+    let cleanupTrackingState = () => {
+        // Initialize heartbeat for current tab
+        Util.updateTabHeartbeat();
+        
+        // Clean up dead tabs
+        Util.cleanupDeadTabs();
+        
+        // Start heartbeat interval
+        setInterval(() => {
+            Util.updateTabHeartbeat();
+        }, 10000); // Update every 10 seconds
+    };
+
+    /**
+     * update character tracking counter in header
+     */
+    let updateCharacterTrackingCounter = () => {
+        let trackedCharacters = Util.getTrackedCharacters();
+        let counterElement = $('.pf-character-tracking-count');
+        
+        if (trackedCharacters.length > 1) {
+            counterElement.text(trackedCharacters.length).show();
+        } else {
+            counterElement.hide();
+        }
+    };
+
+    /**
+     * initialize character tracking for current character
+     */
+    let initializeCharacterTracking = () => {
+        let currentCharacterId = Util.getCurrentCharacterData('id');
+        if (currentCharacterId) {
+            let trackedCharacters = Util.getTrackedCharacters();
+            if (!trackedCharacters.includes(currentCharacterId)) {
+                trackedCharacters.push(currentCharacterId);
+                Util.setTrackedCharacters(trackedCharacters);
+            }
+        }
+        
+        // Update counter
+        updateCharacterTrackingCounter();
+        
+        // Listen for tracking changes
+        $(document).off('pf:updateCharacterTracking').on('pf:updateCharacterTracking', () => {
+            updateCharacterTrackingCounter();
+        });
+        
+        // Listen for character switch events to handle conflicts
+        $(document).off('pf:beforeCharacterSwitch').on('pf:beforeCharacterSwitch', (e, data) => {
+            if(data.characterId) {
+                let conflict = Util.handleCharacterSwitchConflict(data.characterId);
+                if(conflict.hadConflict) {
+                    Util.showNotify({
+                        title: 'Character Tracking',
+                        text: conflict.message,
+                        type: 'info'
+                    });
+                }
+            }
+        });
+        
+        // Handle page unload to clean up heartbeat
+        $(window).on('beforeunload', () => {
+            // Note: We can't remove the heartbeat here because beforeunload
+            // doesn't guarantee execution. The heartbeat will naturally expire.
+        });
+    };
+
+    /**
      * @param changedCharacter
      * @returns {Promise<any>}
      */
@@ -1132,6 +1207,10 @@ define([
                     userInfoElement.find('span').text(Util.getCurrentCharacterData('name'));
                     userInfoElement.find('img').attr('src', Util.eveImageUrl('characters', Util.getCurrentCharacterData('id')));
                 }
+                
+                // initialize character tracking for current character
+                initializeCharacterTracking();
+                
                 // init "character switch" popover
                 userInfoElement.initCharacterSwitchPopover();
 

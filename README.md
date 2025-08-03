@@ -13,6 +13,9 @@ If you wish to contribute please join the [Pathfinder Slack](https://join.slack.
 - Videos [youtube.com](https://www.youtube.com/channel/UC7HU7XEoMbqRwqxDTbMjSPg)
 - Licence [MIT](http://opensource.org/licenses/MIT)
 
+#### Features Documentation
+- [Multi-Character Tracking](docs/multi-character-tracking.md) - Track multiple characters from a single tab
+
 #### Development
 - Developer [Slack](https://slack.com) chat:
   - https://pathfinder-eve-online.slack.com

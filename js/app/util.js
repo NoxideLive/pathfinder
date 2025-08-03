@@ -616,6 +616,11 @@ define([
         let eventNamespace = 'hideCharacterPopup';
 
         requirejs(['text!templates/tooltip/character_switch.html', 'mustache'], function(template, Mustache){
+            
+            // Add image to current character
+            if(userData.character && userData.character.id){
+                userData.character.image = eveImageUrl('characters', userData.character.id);
+            }
 
             let data = {
                 popoverClass: config.popoverCharacterClass,
@@ -667,6 +672,49 @@ define([
                                 // close popover
                                 $('body').click();
                             });
+                            
+                            // Initialize tracking checkboxes
+                            let trackedCharacters = getTrackedCharacters();
+                            let checkboxes = tmpPopupElement.find('.pf-character-tracking-checkbox');
+                            
+                            checkboxes.each(function() {
+                                let checkbox = $(this);
+                                let characterId = parseInt(checkbox.data('character-id'));
+                                
+                                // Set initial state
+                                checkbox.prop('checked', trackedCharacters.includes(characterId));
+                                
+                                // Check if character is tracked elsewhere and disable if so
+                                if (isCharacterTrackedElsewhere(characterId)) {
+                                    checkbox.prop('disabled', true);
+                                    checkbox.closest('tr').addClass('text-muted');
+                                    checkbox.attr('title', 'Character is being tracked in another tab');
+                                }
+                            });
+                            
+                            // Handle checkbox change events
+                            checkboxes.on('change', function() {
+                                let checkbox = $(this);
+                                let characterId = parseInt(checkbox.data('character-id'));
+                                let isChecked = checkbox.prop('checked');
+                                
+                                let trackedCharacters = getTrackedCharacters();
+                                
+                                if (isChecked && !trackedCharacters.includes(characterId)) {
+                                    trackedCharacters.push(characterId);
+                                } else if (!isChecked && trackedCharacters.includes(characterId)) {
+                                    trackedCharacters = trackedCharacters.filter(id => id !== characterId);
+                                }
+                                
+                                setTrackedCharacters(trackedCharacters);
+                                
+                                // Trigger tracking update event
+                                $(document).trigger('pf:updateCharacterTracking', {
+                                    characterId: characterId,
+                                    isTracked: isChecked,
+                                    trackedCharacters: trackedCharacters
+                                });
+                            });
                         });
 
                         // init popover and add specific class to it (for styling)
@@ -703,6 +751,28 @@ define([
                             button.popover('show');
                             popoverElement.initTooltips();
                             popoverElement.velocity('transition.' + easeEffect, velocityOptions);
+                            
+                            // Update tracking checkboxes when shown again
+                            let trackedCharacters = getTrackedCharacters();
+                            let checkboxes = popoverElement.find('.pf-character-tracking-checkbox');
+                            
+                            checkboxes.each(function() {
+                                let checkbox = $(this);
+                                let characterId = parseInt(checkbox.data('character-id'));
+                                
+                                // Update state
+                                checkbox.prop('checked', trackedCharacters.includes(characterId));
+                                
+                                // Check if character is tracked elsewhere
+                                let trackedElsewhere = isCharacterTrackedElsewhere(characterId);
+                                checkbox.prop('disabled', trackedElsewhere);
+                                checkbox.closest('tr').toggleClass('text-muted', trackedElsewhere);
+                                if (trackedElsewhere) {
+                                    checkbox.attr('title', 'Character is being tracked in another tab');
+                                } else {
+                                    checkbox.attr('title', 'track character');
+                                }
+                            });
                         }
                     }
                 });
@@ -3692,6 +3762,70 @@ define([
         return '';
     };
 
+    /**
+     * get multi-character tracking state from localStorage
+     * @returns {Object}
+     */
+    let getCharacterTrackingState = () => {
+        let state = {};
+        try {
+            state = JSON.parse(localStorage.getItem('pf-character-tracking') || '{}');
+        } catch(e) {
+            console.warn('Failed to parse character tracking state:', e);
+        }
+        return state;
+    };
+
+    /**
+     * save multi-character tracking state to localStorage
+     * @param {Object} state
+     */
+    let setCharacterTrackingState = (state) => {
+        try {
+            localStorage.setItem('pf-character-tracking', JSON.stringify(state));
+        } catch(e) {
+            console.warn('Failed to save character tracking state:', e);
+        }
+    };
+
+    /**
+     * get tracked characters for current tab
+     * @returns {Array}
+     */
+    let getTrackedCharacters = () => {
+        let state = getCharacterTrackingState();
+        let tabId = getBrowserTabId();
+        return state[tabId] || [];
+    };
+
+    /**
+     * update tracked characters for current tab
+     * @param {Array} characterIds
+     */
+    let setTrackedCharacters = (characterIds) => {
+        let state = getCharacterTrackingState();
+        let tabId = getBrowserTabId();
+        state[tabId] = characterIds;
+        setCharacterTrackingState(state);
+    };
+
+    /**
+     * check if character is tracked in another tab
+     * @param {number} characterId
+     * @returns {boolean}
+     */
+    let isCharacterTrackedElsewhere = (characterId) => {
+        let state = getCharacterTrackingState();
+        let currentTabId = getBrowserTabId();
+        
+        for(let tabId in state) {
+            if(tabId !== currentTabId && state[tabId].includes(characterId)) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     return {
         config: config,
         getVersion: getVersion,
@@ -3799,6 +3933,11 @@ define([
         redirect: redirect,
         logout: logout,
         setCookie: setCookie,
-        getCookie: getCookie
+        getCookie: getCookie,
+        getCharacterTrackingState: getCharacterTrackingState,
+        setCharacterTrackingState: setCharacterTrackingState,
+        getTrackedCharacters: getTrackedCharacters,
+        setTrackedCharacters: setTrackedCharacters,
+        isCharacterTrackedElsewhere: isCharacterTrackedElsewhere
     };
 });

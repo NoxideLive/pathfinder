@@ -1119,6 +1119,20 @@ define([
     };
 
     /**
+     * initialize character tracking for current character
+     */
+    let initializeCharacterTracking = () => {
+        let currentCharacterId = Util.getCurrentCharacterData('id');
+        if (currentCharacterId) {
+            let trackedCharacters = Util.getTrackedCharacters();
+            if (!trackedCharacters.includes(currentCharacterId)) {
+                trackedCharacters.push(currentCharacterId);
+                Util.setTrackedCharacters(trackedCharacters);
+            }
+        }
+    };
+
+    /**
      * @param changedCharacter
      * @returns {Promise<any>}
      */
@@ -1132,6 +1146,10 @@ define([
                     userInfoElement.find('span').text(Util.getCurrentCharacterData('name'));
                     userInfoElement.find('img').attr('src', Util.eveImageUrl('characters', Util.getCurrentCharacterData('id')));
                 }
+                
+                // initialize character tracking for current character
+                initializeCharacterTracking();
+                
                 // init "character switch" popover
                 userInfoElement.initCharacterSwitchPopover();
 

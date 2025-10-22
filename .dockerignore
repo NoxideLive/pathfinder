@@ -1,0 +1,37 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+IMPLEMENTATION_SUMMARY.txt
+
+# Node modules and build artifacts
+node_modules/
+public/js/vX.X.X/
+
+# Temporary files
+tmp/cache/*
+tmp/logs/*
+!tmp/.gitkeep
+
+# IDE files
+.idea
+.vscode
+
+# Composer
+vendor/
+composer.lock
+
+# Environment files (we'll configure these in the container)
+.env
+
+# Test files
+test-mock-mode.php
+
+# Demo files (optional - remove if you want to include)
+# mock-mode-demo.php
+
+# Build artifacts
+*.log

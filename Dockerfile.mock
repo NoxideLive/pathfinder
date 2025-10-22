@@ -1,0 +1,50 @@
+# Dockerfile for Pathfinder in Mock Mode
+# This container runs the application without external dependencies (MySQL, SSO, ESI)
+
+FROM php:8.1-cli
+
+# Set working directory
+WORKDIR /var/www/pathfinder
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libzip-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Copy application files
+COPY . .
+
+# Copy mock-enabled environment configuration
+RUN cp app/environment.ini app/environment.ini.original && \
+    sed -i 's/SERVER.*=.*PRODUCTION/SERVER = DEVELOP/' app/environment.ini && \
+    sed -i 's/MOCK_ALLOWED.*=.*0/MOCK_ALLOWED = 1/' app/environment.ini && \
+    sed -i 's/MOCK_PHP_ENABLED.*=.*0/MOCK_PHP_ENABLED = 1/' app/environment.ini
+
+# Create necessary directories
+RUN mkdir -p tmp/cache tmp/logs && \
+    chmod -R 777 tmp/
+
+# Install PHP dependencies (without dev dependencies for lighter image)
+# Using --no-scripts to avoid post-install scripts that might fail
+RUN composer install --no-dev --no-scripts --optimize-autoloader || true
+
+# Expose port 8000
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD php -r "echo 'OK';" || exit 1
+
+# Start PHP built-in server
+CMD ["php", "-S", "0.0.0.0:8000", "-t", "."]

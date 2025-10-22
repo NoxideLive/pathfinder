@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Mode Test</title>
+    <script src="js/lib/jquery-3.4.1.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .info { color: #2196F3; }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #output {
+            background: #272822;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            min-height: 100px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Mock Mode Test Page</h1>
+    
+    <div class="test-section">
+        <h3>Current Status</h3>
+        <p id="status">Loading...</p>
+    </div>
+
+    <div class="test-section">
+        <h3>Quick Actions</h3>
+        <button onclick="enableMockMode()">Enable Mock Mode</button>
+        <button onclick="disableMockMode()">Disable Mock Mode</button>
+        <button onclick="checkMockMode()">Check Status</button>
+        <button onclick="clearOutput()">Clear Output</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Requests</h3>
+        <button onclick="testInitData()">Test /api/Map/initData</button>
+        <button onclick="testServerStatus()">Test /api/User/getEveServerStatus</button>
+        <button onclick="testUserData()">Test /api/Map/updateUserData</button>
+        <button onclick="testUnknownEndpoint()">Test Unknown Endpoint</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Output Console</h3>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        // Simple mock mode detection
+        function isMockModeEnabled() {
+            // Check URL parameter
+            let urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('mockMode')) {
+                return urlParams.get('mockMode') === 'true';
+            }
+            
+            // Check localStorage
+            try {
+                let storedMode = localStorage.getItem('pathfinder_mock_mode');
+                if (storedMode !== null) {
+                    return storedMode === 'true';
+                }
+            } catch (e) {
+                console.warn('localStorage not available');
+            }
+            
+            // Check global config
+            if (window.PATHFINDER_MOCK_MODE !== undefined) {
+                return window.PATHFINDER_MOCK_MODE === true;
+            }
+            
+            return false;
+        }
+
+        function log(message, type = 'info') {
+            let output = document.getElementById('output');
+            let timestamp = new Date().toLocaleTimeString();
+            let color = type === 'success' ? '#4CAF50' : 
+                       type === 'error' ? '#f44336' : '#2196F3';
+            output.innerHTML += `<span style="color: ${color}">[${timestamp}] ${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+            log('Output cleared', 'info');
+        }
+
+        function updateStatus() {
+            let status = document.getElementById('status');
+            let enabled = isMockModeEnabled();
+            if (enabled) {
+                status.innerHTML = '<span class="success">✅ Mock Mode is ENABLED</span>';
+                log('Mock mode is currently ENABLED', 'success');
+            } else {
+                status.innerHTML = '<span class="error">❌ Mock Mode is DISABLED</span>';
+                log('Mock mode is currently DISABLED', 'error');
+            }
+        }
+
+        function enableMockMode() {
+            localStorage.setItem('pathfinder_mock_mode', 'true');
+            log('Mock mode enabled in localStorage', 'success');
+            log('Reloading page...', 'info');
+            setTimeout(() => location.reload(), 1000);
+        }
+
+        function disableMockMode() {
+            localStorage.removeItem('pathfinder_mock_mode');
+            log('Mock mode disabled', 'success');
+            log('Reloading page...', 'info');
+            setTimeout(() => location.reload(), 1000);
+        }
+
+        function checkMockMode() {
+            updateStatus();
+        }
+
+        // Test functions
+        function testInitData() {
+            log('Testing GET /api/Map/initData', 'info');
+            $.ajax({
+                url: '/api/Map/initData',
+                type: 'GET',
+                dataType: 'json'
+            }).done(function(data) {
+                log('✅ SUCCESS: Received response', 'success');
+                log(JSON.stringify(data, null, 2).substring(0, 200) + '...', 'info');
+            }).fail(function(xhr, status, error) {
+                log('❌ FAILED: ' + status + ' - ' + error, 'error');
+            });
+        }
+
+        function testServerStatus() {
+            log('Testing GET /api/User/getEveServerStatus', 'info');
+            $.ajax({
+                url: '/api/User/getEveServerStatus',
+                type: 'GET',
+                dataType: 'json'
+            }).done(function(data) {
+                log('✅ SUCCESS: Received response', 'success');
+                log(JSON.stringify(data, null, 2), 'info');
+            }).fail(function(xhr, status, error) {
+                log('❌ FAILED: ' + status + ' - ' + error, 'error');
+            });
+        }
+
+        function testUserData() {
+            log('Testing POST /api/Map/updateUserData', 'info');
+            $.ajax({
+                url: '/api/Map/updateUserData',
+                type: 'POST',
+                dataType: 'json',
+                data: JSON.stringify({test: 'data'}),
+                contentType: 'application/json'
+            }).done(function(data) {
+                log('✅ SUCCESS: Received response', 'success');
+                log(JSON.stringify(data, null, 2), 'info');
+            }).fail(function(xhr, status, error) {
+                log('❌ FAILED: ' + status + ' - ' + error, 'error');
+            });
+        }
+
+        function testUnknownEndpoint() {
+            log('Testing GET /api/Unknown/endpoint', 'info');
+            $.ajax({
+                url: '/api/Unknown/endpoint',
+                type: 'GET',
+                dataType: 'json'
+            }).done(function(data) {
+                log('✅ SUCCESS: Received response (generic)', 'success');
+                log(JSON.stringify(data, null, 2), 'info');
+            }).fail(function(xhr, status, error) {
+                log('❌ FAILED: ' + status + ' - ' + error, 'error');
+            });
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', function() {
+            log('Test page loaded', 'info');
+            updateStatus();
+            
+            if (isMockModeEnabled()) {
+                log('', 'info');
+                log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'success');
+                log('  MOCK MODE ACTIVE - Ready for testing!  ', 'success');
+                log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'success');
+                log('', 'info');
+                log('Note: This test page requires the mock interceptor', 'info');
+                log('to be loaded. In production, this happens automatically', 'info');
+                log('in login.js and mappage.js initialization.', 'info');
+                log('', 'info');
+                log('To fully test, use this page within the Pathfinder', 'info');
+                log('application context where RequireJS and the mock', 'info');
+                log('modules are properly loaded.', 'info');
+            } else {
+                log('', 'info');
+                log('ℹ️  Mock mode is not enabled. Click "Enable Mock Mode"', 'info');
+                log('   to activate it, or add ?mockMode=true to the URL.', 'info');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -105,6 +105,9 @@ class Controller {
 
 
             $f3->set('tplImage', Format\Image::instance());
+            
+            // Set mock mode allowed flag (controlled by environment.ini)
+            $f3->set('tplMockAllowed', (int)$f3->get('MOCK_ALLOWED'));
         }
 
         return true;

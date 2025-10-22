@@ -1,0 +1,78 @@
+{
+  "mapData": [
+    {
+      "config": {
+        "id": 1,
+        "name": "Mock Map",
+        "icon": "fa-star",
+        "type": {
+          "id": 1,
+          "name": "standard"
+        },
+        "scope": {
+          "id": 1,
+          "name": "none"
+        },
+        "created": "2024-01-01 12:00:00",
+        "updated": "2024-01-01 12:00:00"
+      },
+      "data": {
+        "systems": [
+          {
+            "id": 1,
+            "systemId": 30000142,
+            "name": "Jita",
+            "alias": "Trade Hub",
+            "typeId": 2,
+            "security": "1.0",
+            "trueSec": 0.9459,
+            "effect": "",
+            "position": {
+              "x": 100,
+              "y": 100
+            },
+            "statusId": 2,
+            "locked": 0,
+            "rallyUpdated": null,
+            "rallyPoke": 0,
+            "statics": [],
+            "created": "2024-01-01 12:00:00",
+            "updated": "2024-01-01 12:00:00"
+          },
+          {
+            "id": 2,
+            "systemId": 30000144,
+            "name": "Perimeter",
+            "alias": "",
+            "typeId": 2,
+            "security": "1.0",
+            "trueSec": 0.9428,
+            "effect": "",
+            "position": {
+              "x": 300,
+              "y": 100
+            },
+            "statusId": 2,
+            "locked": 0,
+            "rallyUpdated": null,
+            "rallyPoke": 0,
+            "statics": [],
+            "created": "2024-01-01 12:00:00",
+            "updated": "2024-01-01 12:00:00"
+          }
+        ],
+        "connections": [
+          {
+            "id": 1,
+            "source": 1,
+            "target": 2,
+            "scope": "stargate",
+            "type": ["wh_fresh"],
+            "created": "2024-01-01 12:00:00",
+            "updated": "2024-01-01 12:00:00"
+          }
+        ]
+      }
+    }
+  ]
+}

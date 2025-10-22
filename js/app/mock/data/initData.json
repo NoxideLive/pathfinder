@@ -1,0 +1,133 @@
+{
+  "timer": {
+    "PROGRAM_UPDATE_CHECK": 10,
+    "MAP_UPDATE": 5,
+    "MAP_UPDATE_SLOW": 10,
+    "USER_UPDATE": 3,
+    "SHARED_WORKER_PING": 3
+  },
+  "mapTypes": {
+    "standard": {
+      "id": 1,
+      "label": "Standard",
+      "class": "pf-map-type-standard",
+      "classTab": "pf-map-type-tab-standard",
+      "defaultConfig": {
+        "icon": "fa-star",
+        "type_id": 1,
+        "name": "New Map",
+        "scope_id": 1,
+        "max_systems": 50,
+        "max_connections": 100
+      }
+    },
+    "wormhole": {
+      "id": 2,
+      "label": "Wormhole",
+      "class": "pf-map-type-wormhole",
+      "classTab": "pf-map-type-tab-wormhole",
+      "defaultConfig": {
+        "icon": "fa-dot-circle-o",
+        "type_id": 2,
+        "name": "New WH Map",
+        "scope_id": 1,
+        "max_systems": 100,
+        "max_connections": 200
+      }
+    }
+  },
+  "mapScopes": {
+    "none": {
+      "id": 1,
+      "label": "None"
+    },
+    "character": {
+      "id": 2,
+      "label": "Character"
+    },
+    "corporation": {
+      "id": 3,
+      "label": "Corporation"
+    },
+    "alliance": {
+      "id": 4,
+      "label": "Alliance"
+    }
+  },
+  "connectionScopes": {
+    "wh": {
+      "id": 1,
+      "label": "wormhole",
+      "connectorDefinition": "Flowchart"
+    },
+    "stargate": {
+      "id": 2,
+      "label": "stargate",
+      "connectorDefinition": "Straight"
+    },
+    "jumpbridge": {
+      "id": 3,
+      "label": "jumpbridge",
+      "connectorDefinition": "Straight"
+    }
+  },
+  "systemStatus": {
+    "unknown": {
+      "id": 1,
+      "label": "unknown",
+      "class": "pf-system-status-unknown"
+    },
+    "friendly": {
+      "id": 2,
+      "label": "friendly",
+      "class": "pf-system-status-friendly"
+    },
+    "occupied": {
+      "id": 3,
+      "label": "occupied",
+      "class": "pf-system-status-occupied"
+    },
+    "hostile": {
+      "id": 4,
+      "label": "hostile",
+      "class": "pf-system-status-hostile"
+    },
+    "empty": {
+      "id": 5,
+      "label": "empty",
+      "class": "pf-system-status-empty"
+    },
+    "unscanned": {
+      "id": 6,
+      "label": "unscanned",
+      "class": "pf-system-status-unscanned"
+    }
+  },
+  "systemType": {
+    "wormhole": {
+      "id": 1,
+      "name": "wormhole"
+    },
+    "high": {
+      "id": 2,
+      "name": "high"
+    },
+    "low": {
+      "id": 3,
+      "name": "low"
+    },
+    "null": {
+      "id": 4,
+      "name": "null"
+    },
+    "thera": {
+      "id": 5,
+      "name": "thera"
+    }
+  },
+  "routes": {
+    "sso": "/sso",
+    "login": "/",
+    "logout": "/api/User/logout"
+  }
+}

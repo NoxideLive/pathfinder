@@ -7,7 +7,9 @@
 
 namespace Exodus4D\Pathfinder\Lib\Mock;
 
-class MockDatabase extends \DB\SQL {
+use Exodus4D\Pathfinder\Lib\Db\Sql;
+
+class MockDatabase extends Sql {
 
     /**
      * @var array Mock data storage
@@ -27,17 +29,25 @@ class MockDatabase extends \DB\SQL {
      * @param array|null $options (ignored in mock mode)
      */
     public function __construct($dsn, $user = null, $pw = null, array $options = null){
-        // Don't call parent constructor - we don't want a real DB connection
-        
         // Set mock data path
         $this->mockDataPath = realpath(__DIR__ . '/../../mock/php/data/');
         
         // Load mock data
         $this->loadMockData();
         
-        // Mock the PDO property that parent class expects
-        $this->pdo = null;
+        // Store DSN for getDSN() method
         $this->dsn = $dsn;
+        
+        // Create a mock PDO-like object to avoid errors
+        // We use a stub object that won't actually connect to a database
+        try {
+            // Create an in-memory SQLite database as a placeholder
+            // This prevents errors from code expecting a PDO connection
+            parent::__construct('sqlite::memory:', null, null, null);
+        } catch(\Exception $e) {
+            // If that fails, we'll just set dsn manually
+            $this->dsn = $dsn;
+        }
         
         MockDetector::logMockWarning();
     }
@@ -97,14 +107,6 @@ class MockDatabase extends \DB\SQL {
     }
 
     /**
-     * Get DSN config string
-     * @return string
-     */
-    public function getDSN() : string {
-        return $this->dsn;
-    }
-
-    /**
      * Get all table names (mocked)
      * @return array|bool
      */
@@ -146,22 +148,5 @@ class MockDatabase extends \DB\SQL {
      */
     public function prepareDatabase(string $characterSetDatabase, string $collationDatabase){
         // No-op in mock mode
-    }
-
-    /**
-     * Quote a table/column key (simple implementation)
-     * @param string $key
-     * @return string
-     */
-    public function quotekey(string $key) : string {
-        return '`' . $key . '`';
-    }
-
-    /**
-     * Get database driver (mocked)
-     * @return string
-     */
-    public function driver() : string {
-        return 'mysql';
     }
 }

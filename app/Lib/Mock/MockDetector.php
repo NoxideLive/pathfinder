@@ -21,6 +21,12 @@ class MockDetector extends \Prefab {
         // Check if we're in DEVELOP environment
         $server = $f3->get('ENVIRONMENT.SERVER');
         if($server !== 'DEVELOP'){
+            // Security check: log if someone tries to enable mock mode in production
+            $mockAllowedProd = Controller::getEnvironmentData('MOCK_ALLOWED');
+            $mockPhpEnabledProd = Controller::getEnvironmentData('MOCK_PHP_ENABLED');
+            if(!empty($mockAllowedProd) || !empty($mockPhpEnabledProd)){
+                error_log('[PATHFINDER SECURITY WARNING] Attempt to enable mock mode in PRODUCTION environment was blocked!');
+            }
             return false;
         }
         

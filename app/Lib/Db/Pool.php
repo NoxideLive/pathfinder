@@ -7,6 +7,8 @@ namespace Exodus4D\Pathfinder\Lib\Db;
 use DB\SQL\Schema;
 use Exodus4D\Pathfinder\Controller\LogController;
 use Exodus4D\Pathfinder\Exception\ConfigException;
+use Exodus4D\Pathfinder\Lib\Mock\MockDetector;
+use Exodus4D\Pathfinder\Lib\Mock\MockDatabase;
 
 class Pool extends \Prefab {
 
@@ -180,7 +182,18 @@ class Pool extends \Prefab {
     protected function newDB(array $config) : ?Sql {
         $db = null;
 
-        if($config['SCHEME'] == 'mysql'){
+        // Check if mock mode is enabled
+        if(MockDetector::isMockMode()){
+            try{
+                $db = new MockDatabase($this->buildDnsFromConfig($config), $config['USER'], $config['PASS'], $config['OPTIONS']);
+            }catch(\PDOException $e){
+                $this->pushError($config['ALIAS'], $e);
+
+                if(!$this->isSilent()){
+                    self::getLogger()->write($e);
+                }
+            }
+        }elseif($config['SCHEME'] == 'mysql'){
             try{
                 $db = new Sql($this->buildDnsFromConfig($config), $config['USER'], $config['PASS'], $config['OPTIONS']);
             }catch(\PDOException $e){

@@ -10,6 +10,8 @@ namespace Exodus4D\Pathfinder\Controller;
 
 
 use Exodus4D\Pathfinder\Model\Pathfinder;
+use Exodus4D\Pathfinder\Lib\Mock\MockDetector;
+use Exodus4D\Pathfinder\Lib\Mock\MockAuth;
 
 class AccessController extends Controller {
 
@@ -42,6 +44,12 @@ class AccessController extends Controller {
      * @throws \Exception
      */
     protected function isLoggedIn(\Base $f3) : string {
+        // Check if mock mode is enabled - bypass authentication
+        if(MockDetector::isMockMode()){
+            MockDetector::logMockWarning();
+            return 'OK';
+        }
+        
         $loginStatus = 'UNKNOWN';
         // disable ttl cache time here. Further getCharacter() calls should use a short ttl
         if($character = $this->getCharacter(0)){

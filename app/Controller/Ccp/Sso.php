@@ -17,6 +17,8 @@ use Exodus4D\Pathfinder\Controller;
 use Exodus4D\Pathfinder\Controller\Api as Api;
 use Exodus4D\Pathfinder\Model\Pathfinder;
 use Exodus4D\Pathfinder\Lib;
+use Exodus4D\Pathfinder\Lib\Mock\MockDetector;
+use Exodus4D\Pathfinder\Lib\Mock\MockAuth;
 use Firebase\JWT\JWT;
 use Firebase\JWT\JWK;
 
@@ -53,6 +55,14 @@ class Sso extends Api\User{
      * @param \Base $f3
      */
     public function requestAdminAuthorization($f3){
+        // Check if mock mode is enabled - bypass SSO
+        if(MockDetector::isMockMode()){
+            MockDetector::logMockWarning();
+            // In mock mode, redirect directly without SSO
+            $f3->reroute(['map', ['*' => '']]);
+            return;
+        }
+        
         // store browser tabId to be "targeted" after login
         $f3->set(self::SESSION_KEY_SSO_FROM, 'admin');
 
@@ -67,6 +77,14 @@ class Sso extends Api\User{
      * @throws \Exception
      */
     public function requestAuthorization($f3){
+        // Check if mock mode is enabled - bypass SSO
+        if(MockDetector::isMockMode()){
+            MockDetector::logMockWarning();
+            // In mock mode, redirect directly to map without SSO
+            $f3->reroute(['map', ['*' => '']]);
+            return;
+        }
+        
         $params = $f3->get('GET');
 
         if(

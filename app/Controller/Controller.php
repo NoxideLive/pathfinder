@@ -17,6 +17,8 @@ use Exodus4D\Pathfinder\Lib\Resource;
 use Exodus4D\Pathfinder\Lib\Monolog;
 use Exodus4D\Pathfinder\Lib\Util;
 use Exodus4D\Pathfinder\Lib\Format;
+use Exodus4D\Pathfinder\Lib\Mock\MockDetector;
+use Exodus4D\Pathfinder\Lib\Mock\MockDataProvider;
 use Exodus4D\Pathfinder\Model\AbstractModel;
 use Exodus4D\Pathfinder\Model\Pathfinder;
 use Exodus4D\Pathfinder\Db\Sql\Mysql;
@@ -90,6 +92,11 @@ class Controller {
     function beforeroute(\Base $f3, $params) : bool {
         // init user session
         $this->initSession($f3);
+
+        // Inject mock data if mock mode is enabled
+        if(MockDetector::isMockMode()){
+            $this->injectMockData($f3);
+        }
 
         if($f3->get('AJAX')){
             header('Content-Type: application/json');
@@ -197,6 +204,25 @@ class Controller {
         $resource->register('url', '//i.ytimg.com', 'dns-prefetch'); // YouTube tiny embed domain
 
         return $resource;
+    }
+
+    /**
+     * inject mock data into F3 template variables
+     * @param \Base $f3
+     */
+    protected function injectMockData(\Base $f3) : void {
+        MockDetector::logMockWarning();
+        
+        // Get mock template data
+        $mockData = MockDataProvider::getTemplateData();
+        
+        // Set mock data as F3 variables
+        foreach($mockData as $key => $value){
+            $f3->set('mock_' . $key, $value);
+        }
+        
+        // Add visual indicator that mock mode is active
+        $f3->set('mock_mode_active', true);
     }
 
     /**

@@ -128,9 +128,9 @@ define([
         let deferred = $.Deferred();
 
         // Simulate network delay if configured
-        let delayPromise = mockConfig.simulateDelay
-            ? MockDataLoader.simulateDelay(mockConfig.delayMin, mockConfig.delayMax)
-            : Promise.resolve();
+        let delayPromise = mockConfig.simulateDelay ?
+            MockDataLoader.simulateDelay(mockConfig.delayMin, mockConfig.delayMax) :
+            Promise.resolve();
 
         delayPromise.then(() => {
             // Simulate random failures if configured

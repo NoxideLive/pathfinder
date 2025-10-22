@@ -70,6 +70,12 @@
         <strong>⚠️ Important:</strong> Mock mode is for development only. Never use in production!
     </div>
 
+    <div class="warning">
+        <strong>🔒 Production Safety:</strong> Mock mode is controlled by <code>MOCK_ALLOWED</code> in <code>app/environment.ini</code>. 
+        It is disabled by default in PRODUCTION mode and enabled in DEVELOP mode. Even with URL parameters or localStorage, 
+        mock mode will not activate if <code>MOCK_ALLOWED = 0</code>.
+    </div>
+
     <h2>Quick Start</h2>
     
     <div class="example-section">

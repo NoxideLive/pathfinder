@@ -18,6 +18,14 @@ mock/
 
 ## Quick Start
 
+### Production Safety
+
+**Important**: Mock mode is controlled by the `MOCK_ALLOWED` setting in `app/environment.ini`:
+- **DEVELOP mode**: `MOCK_ALLOWED = 1` (enabled by default)
+- **PRODUCTION mode**: `MOCK_ALLOWED = 0` (disabled by default)
+
+Mock mode will not activate if `MOCK_ALLOWED = 0`, regardless of URL parameters or localStorage settings.
+
 ### Enable Mock Mode
 Add `?mockMode=true` to your URL:
 ```
@@ -32,17 +40,21 @@ When mock mode is active, you'll see:
 [MOCK] POST /api/Map/updateData {...}
 ```
 
+If you see a warning about mock mode being disabled, check `app/environment.ini` and ensure `MOCK_ALLOWED = 1`.
+
 ## How It Works
 
-1. **Initialization**: `MockInterceptor.init()` is called in `login.js` and `mappage.js`
-2. **Detection**: Checks URL param, localStorage, or global config
-3. **Interception**: Overrides `$.ajax` to intercept API requests
-4. **Routing**: Maps requests to mock data files
-5. **Response**: Returns mock data with simulated delays
+1. **Environment Check**: Verifies `MOCK_ALLOWED = 1` in `environment.ini`
+2. **Initialization**: `MockInterceptor.init()` is called in `login.js` and `mappage.js`
+3. **Detection**: Checks URL param, localStorage, or global config
+4. **Interception**: Overrides `$.ajax` to intercept API requests (if allowed)
+5. **Routing**: Maps requests to mock data files
+6. **Response**: Returns mock data with simulated delays
 
 ## Components
 
 ### mockInterceptor.js
+- Checks environment permission (`MOCK_ALLOWED` from environment.ini)
 - Detects if mock mode should be enabled
 - Intercepts AJAX requests to `/api/*`
 - Simulates network delays and failures

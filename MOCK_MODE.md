@@ -34,6 +34,23 @@ The mock mode system consists of three main components:
 
 ## How to Enable Mock Mode
 
+**Important**: Mock mode is controlled by the `MOCK_ALLOWED` setting in `app/environment.ini`. By default, it is **enabled** in `DEVELOP` mode and **disabled** in `PRODUCTION` mode for security.
+
+### Environment Configuration
+
+Before using any of the activation methods below, ensure mock mode is allowed in your environment:
+
+**`app/environment.ini`:**
+```ini
+[ENVIRONMENT.DEVELOP]
+MOCK_ALLOWED = 1    ; Mock mode allowed (default for development)
+
+[ENVIRONMENT.PRODUCTION]
+MOCK_ALLOWED = 0    ; Mock mode disabled (default for production)
+```
+
+If you try to enable mock mode when `MOCK_ALLOWED = 0`, you'll see a console warning and mock mode will not activate.
+
 ### Method 1: URL Parameter (Recommended for quick testing)
 Add `?mockMode=true` to the URL:
 ```
@@ -63,6 +80,16 @@ Set the global variable before the app loads (in HTML or before scripts load):
     window.PATHFINDER_MOCK_MODE = true;
 </script>
 ```
+
+## Production Safety
+
+Mock mode includes multiple layers of protection to prevent accidental use in production:
+
+1. **Environment Setting**: The `MOCK_ALLOWED` setting in `environment.ini` must be enabled
+2. **Console Warning**: If mock mode is attempted when not allowed, a clear warning is shown
+3. **No Bypass**: Even with URL parameters or localStorage, mock mode won't activate if `MOCK_ALLOWED = 0`
+
+This ensures that mock mode cannot be accidentally enabled in production environments.
 
 ## Configuration
 
@@ -222,10 +249,18 @@ Internal Server Error (Simulated)
 ## Troubleshooting
 
 ### Mock mode not activating
-- Check browser console for errors
+- **Check environment setting**: Verify `MOCK_ALLOWED = 1` in `app/environment.ini` for your environment (DEVELOP or PRODUCTION)
+- **Check console warning**: Look for "[MOCK] Mock mode is disabled in this environment" message
+- Check browser console for other errors
 - Verify RequireJS is loading the mock modules
 - Clear localStorage and try again
 - Check that URL parameter is exactly `mockMode=true`
+
+### Mock mode blocked in production
+If you see the warning "Mock mode is disabled in this environment":
+- This is intentional for production safety
+- Edit `app/environment.ini` and set `MOCK_ALLOWED = 1` in your environment section
+- **Never enable mock mode in production environments**
 
 ### Mock data not loading
 - Verify JSON files are valid (use a JSON validator)
@@ -236,6 +271,7 @@ Internal Server Error (Simulated)
 - Verify requests are going to `/api/*` endpoints
 - Check that `MockInterceptor.init()` is called before AJAX requests
 - Look for JavaScript errors in console
+- Ensure `MOCK_ALLOWED = 1` in environment.ini
 
 ### Need to disable mock mode quickly
 Add `?mockMode=false` to URL or run in console:

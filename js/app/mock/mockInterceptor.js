@@ -22,9 +22,18 @@ define([
     /**
      * Check if mock mode should be enabled
      * Checks for URL parameter, localStorage, or global config
+     * Also verifies that mock mode is allowed in current environment
      * @returns {boolean}
      */
     let checkMockMode = () => {
+        // First check if mock mode is allowed in this environment (from environment.ini)
+        let mockAllowed = document.body.getAttribute('data-mock-allowed');
+        if (mockAllowed !== '1') {
+            // Mock mode is disabled in environment.ini (e.g., PRODUCTION)
+            console.warn('[MOCK] Mock mode is disabled in this environment. Set MOCK_ALLOWED=1 in environment.ini to enable.');
+            return false;
+        }
+
         // Check URL parameter (highest priority)
         let urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('mockMode')) {

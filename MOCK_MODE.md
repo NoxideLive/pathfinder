@@ -17,7 +17,21 @@ Perfect for:
 
 ## Quick Start
 
-### Enable Mock Mode
+### Option 1: Docker (Recommended)
+
+**Easiest way - No configuration needed!**
+
+```bash
+# Start with one command
+./start-mock.sh
+
+# Access the application
+open http://localhost:8000/mock-mode-demo.php
+```
+
+See **[DOCKER_MOCK_MODE.md](DOCKER_MOCK_MODE.md)** for full Docker documentation.
+
+### Option 2: Manual Setup
 
 Edit `app/environment.ini`:
 ```ini
@@ -27,20 +41,15 @@ MOCK_ALLOWED = 1
 MOCK_PHP_ENABLED = 1
 ```
 
-### Verify Setup
-
+Verify and start:
 ```bash
 php test-mock-mode.php
-```
-
-### Start Development Server
-
-```bash
 php -S localhost:8000
 ```
 
 ## Documentation
 
+- **[DOCKER_MOCK_MODE.md](DOCKER_MOCK_MODE.md)** - Docker setup guide (NEW!)
 - **[MOCK_MODE_USAGE.md](MOCK_MODE_USAGE.md)** - Comprehensive usage guide
 - **[app/mock/README.md](app/mock/README.md)** - Implementation details
 - **[test-mock-mode.php](test-mock-mode.php)** - Validation test script

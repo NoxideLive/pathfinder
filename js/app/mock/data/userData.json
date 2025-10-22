@@ -1,0 +1,14 @@
+{
+  "data": {
+    "id": 123456789,
+    "name": "Mock Character",
+    "corporation": {
+      "id": 987654321,
+      "name": "Mock Corporation"
+    },
+    "alliance": {
+      "id": 111222333,
+      "name": "Mock Alliance"
+    }
+  }
+}

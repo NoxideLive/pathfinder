@@ -7,6 +7,7 @@ define([
     'app/init',
     'app/util',
     'app/render',
+    'app/mock/mockInterceptor',
     'blueImpGallery',
     'layout/header_login',
     'lazyload',
@@ -17,7 +18,7 @@ define([
     'dialog/changelog',
     'dialog/credit',
     'dialog/api_status'
-], ($, Init, Util, Render, Gallery, HeaderLogin, LazyLoad, bootbox) => {
+], ($, Init, Util, Render, MockInterceptor, Gallery, HeaderLogin, LazyLoad, bootbox) => {
 
     'use strict';
 
@@ -722,6 +723,9 @@ define([
 
         // clear sessionStorage
         Util.clearSessionStorage();
+
+        // initialize mock mode interceptor (if enabled)
+        MockInterceptor.init();
 
         // set default AJAX config
         Util.ajaxSetup();

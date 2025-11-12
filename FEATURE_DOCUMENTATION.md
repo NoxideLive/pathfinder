@@ -888,12 +888,12 @@
 
 1. **Setup Route:**
    - Must be manually disabled in production
-   - Security risk if left enabled
+   - Presents security risk if left enabled
    - No automated setup process
 
 2. **Character Kick/Ban:**
    - Limited duration options
-   - No permanent ban option clear
+   - No clear permanent ban option
    - No IP-based blocking
 
 3. **Map Management:**
@@ -1019,8 +1019,8 @@
 - **Lines of Code (Main Files):**
   - `map.js`: ~3,449 lines
   - `MapModel.php`: ~1,500 lines
+  - `CharacterModel.php`: ~1,482 lines
   - `Map.php` (Controller): ~1,097 lines
-  - `CharacterModel.php`: ~52,548 lines
 
 ---
 

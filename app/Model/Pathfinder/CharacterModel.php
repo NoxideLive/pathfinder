@@ -14,53 +14,53 @@ use Exodus4D\Pathfinder\Lib\Config;
 use Exodus4D\Pathfinder\Model\Universe;
 use DB\SQL\Schema;
 
-class CharacterModel extends AbstractPathfinderModel {
+class CharacterModel extends AbstractPathfinderModel{
 
     /**
      * @var string
      */
-    protected $table                    = 'character';
+    protected $table = 'character';
 
     /**
      * cache key prefix for getData(); result WITH log data
      */
-    const DATA_CACHE_KEY_LOG            = 'LOG';
+    const DATA_CACHE_KEY_LOG = 'LOG';
 
     /**
      * log message for character access
      */
-    const LOG_ACCESS                    = 'charId: [%20s], status: %s, charName: %s';
+    const LOG_ACCESS = 'charId: [%20s], status: %s, charName: %s';
 
     /**
      * max count of historic character logs
      * -> this includes logs where just e.g. shipTypeId has changed but no systemId change!
      */
-    const MAX_LOG_HISTORY_DATA          = 10;
+    const MAX_LOG_HISTORY_DATA = 10;
 
     /**
      * TTL for historic character logs
      */
-    const TTL_LOG_HISTORY               = 60 * 60 * 22;
+    const TTL_LOG_HISTORY = 60 * 60 * 22;
 
     /**
      * cache key prefix historic character logs
      */
-    const DATA_CACHE_KEY_LOG_HISTORY    = 'LOG_HISTORY';
+    const DATA_CACHE_KEY_LOG_HISTORY = 'LOG_HISTORY';
 
     /**
      * character authorization status
      * @var array
      */
     const AUTHORIZATION_STATUS = [
-        'OK'            => true,                                        // success
-        'UNKNOWN'       => 'error',                                     // general authorization error
-        'CHARACTER'     => 'failed to match character whitelist',
-        'CORPORATION'   => 'failed to match corporation whitelist',
-        'ALLIANCE'      => 'failed to match alliance whitelist',
-        'KICKED'        => 'character is kicked',
-        'BANNED'        => 'character is banned'
+        'OK' => true,                                        // success
+        'UNKNOWN' => 'error',                                     // general authorization error
+        'CHARACTER' => 'failed to match character whitelist',
+        'CORPORATION' => 'failed to match corporation whitelist',
+        'ALLIANCE' => 'failed to match alliance whitelist',
+        'KICKED' => 'character is kicked',
+        'BANNED' => 'character is banned'
     ];
-    
+
     /**
      * enables change for "kicked" column
      * -> see kick();
@@ -151,7 +151,7 @@ class CharacterModel extends AbstractPathfinderModel {
         'cloneLocationId' => [
             'type' => Schema::DT_BIGINT,
             'index' => true,
-            'activity-log' =>  true
+            'activity-log' => true
         ],
         'cloneLocationType' => [
             'type' => Schema::DT_VARCHAR128,
@@ -209,25 +209,27 @@ class CharacterModel extends AbstractPathfinderModel {
      */
     public function getData($addLogData = false, $addLogHistoryData = false){
         // check for cached data
-        if(is_null($characterData = $this->getCacheData())){
+        if (is_null($characterData = $this->getCacheData())) {
             // no cached character data found
 
-            $characterData                      = (object) [];
-            $characterData->id                  = $this->_id;
-            $characterData->name                = $this->name;
-            $characterData->role                = $this->roleId->getData();
-            $characterData->shared              = $this->shared;
-            $characterData->logLocation         = $this->logLocation;
-            $characterData->selectLocation      = $this->selectLocation;
+            $characterData = (object)[];
+            $characterData->id = $this->_id;
+            $characterData->name = $this->name;
+            $characterData->role = $this->roleId->getData();
+            $characterData->shared = $this->shared;
+            $characterData->logLocation = $this->logLocation;
+            $characterData->selectLocation = $this->selectLocation;
+            $characterData->online = $this->isOnline($this->getAccessToken());
+
 
             // check for corporation
-            if($corporation = $this->getCorporation()){
-                $characterData->corporation     = $corporation->getData();
+            if ($corporation = $this->getCorporation()) {
+                $characterData->corporation = $corporation->getData();
             }
 
             // check for alliance
-            if($alliance = $this->getAlliance()){
-                $characterData->alliance        = $alliance->getData();
+            if ($alliance = $this->getAlliance()) {
+                $characterData->alliance = $alliance->getData();
             }
 
             // max caching time for a system
@@ -236,26 +238,26 @@ class CharacterModel extends AbstractPathfinderModel {
             $this->updateCacheData($characterData);
         }
 
-        if($addLogData){
-            if(is_null($logData = $this->getCacheData(self::DATA_CACHE_KEY_LOG))){
-                if($logModel = $this->getLog()){
+        if ($addLogData) {
+            if (is_null($logData = $this->getCacheData(self::DATA_CACHE_KEY_LOG))) {
+                if ($logModel = $this->getLog()) {
                     $logData = $logModel->getData();
                     $this->updateCacheData($logData, self::DATA_CACHE_KEY_LOG);
                 }
             }
 
-            if($logData){
-                $characterData->log             = $logData;
+            if ($logData) {
+                $characterData->log = $logData;
             }
         }
 
-        if($addLogHistoryData && $characterData->log){
-            $characterData->logHistory          = $this->getLogHistoryJumps($characterData->log->system->id);
+        if ($addLogHistoryData && $characterData->log) {
+            $characterData->logHistory = $this->getLogHistoryJumps($characterData->log->system->id);
         }
 
         // temp "authStatus" should not be cached
-        if($this->authStatus){
-            $characterData->authStatus          = $this->authStatus;
+        if ($this->authStatus) {
+            $characterData->authStatus = $this->authStatus;
         }
 
         return $characterData;
@@ -266,18 +268,18 @@ class CharacterModel extends AbstractPathfinderModel {
      * @return \stdClass
      * @throws \Exception
      */
-    public function getBasicData() : \stdClass {
-        $characterData = (object) [];
+    public function getBasicData(): \stdClass{
+        $characterData = (object)[];
         $characterData->id = $this->_id;
         $characterData->name = $this->name;
 
         // check for corporation
-        if($corporation = $this->getCorporation()){
+        if ($corporation = $this->getCorporation()) {
             $characterData->corporation = $corporation->getData(false);
         }
 
         // check for alliance
-        if($alliance = $this->getAlliance()){
+        if ($alliance = $this->getAlliance()) {
             $characterData->alliance = $alliance->getData();
         }
 
@@ -293,8 +295,8 @@ class CharacterModel extends AbstractPathfinderModel {
     public function set_corporationId($corporationId){
         $currentCorporationId = (int)$this->get('corporationId', true);
 
-        if($currentCorporationId !== $corporationId){
-             $this->resetAdminColumns();
+        if ($currentCorporationId !== $corporationId) {
+            $this->resetAdminColumns();
         }
 
         return $corporationId;
@@ -307,8 +309,8 @@ class CharacterModel extends AbstractPathfinderModel {
      * @return string
      */
     public function set_ownerHash($ownerHash){
-        if( $this->ownerHash !== $ownerHash ){
-            if( $this->hasUserCharacter() ){
+        if ($this->ownerHash !== $ownerHash) {
+            if ($this->hasUserCharacter()) {
                 // reset admin actions (e.g. kick/ban)
                 $this->resetAdminColumns();
 
@@ -330,12 +332,12 @@ class CharacterModel extends AbstractPathfinderModel {
      * @throws \Exception
      */
     public function set_kicked($minutes){
-        if($this->allowKickChange){
+        if ($this->allowKickChange) {
             // allowed to set/change -> reset "allowed" property
             $this->allowKickChange = false;
             $kicked = null;
 
-            if($minutes){
+            if ($minutes) {
                 $seconds = $minutes * 60;
                 $timezone = self::getF3()->get('getTimeZone')();
                 $kickedUntil = new \DateTime('now', $timezone);
@@ -344,7 +346,7 @@ class CharacterModel extends AbstractPathfinderModel {
                 $kickedUntil->add(new \DateInterval('PT' . $seconds . 'S'));
                 $kicked = $kickedUntil->format('Y-m-d H:i:s');
             }
-        }else{
+        } else {
             // not allowed to set/change -> keep current status
             $kicked = $this->kicked;
         }
@@ -359,17 +361,17 @@ class CharacterModel extends AbstractPathfinderModel {
      * @throws \Exception
      */
     public function set_banned($status){
-        if($this->allowBanChange){
+        if ($this->allowBanChange) {
             // allowed to set/change -> reset "allowed" property
             $this->allowBanChange = false;
             $banned = null;
 
-            if($status){
+            if ($status) {
                 $timezone = self::getF3()->get('getTimeZone')();
                 $bannedSince = new \DateTime('now', $timezone);
                 $banned = $bannedSince->format('Y-m-d H:i:s');
             }
-        }else{
+        } else {
             // not allowed to set/change -> keep current status
             $banned = $this->banned;
         }
@@ -384,10 +386,10 @@ class CharacterModel extends AbstractPathfinderModel {
      */
     public function set_logLocation($logLocation){
         $logLocation = (bool)$logLocation;
-        if(
+        if (
             !$logLocation &&
             $logLocation !== $this->logLocation
-        ){
+        ) {
             $this->deleteLog();
         }
 
@@ -467,7 +469,7 @@ class CharacterModel extends AbstractPathfinderModel {
      * check whether this character has already a user assigned to it
      * @return bool
      */
-    public function hasUserCharacter() : bool {
+    public function hasUserCharacter(): bool{
         return is_object($this->userCharacter);
     }
 
@@ -475,7 +477,7 @@ class CharacterModel extends AbstractPathfinderModel {
      * check whether this character has an active location log
      * @return bool
      */
-    public function hasLog() : bool {
+    public function hasLog(): bool{
         return is_object($this->characterLog);
     }
 
@@ -483,7 +485,7 @@ class CharacterModel extends AbstractPathfinderModel {
      * check whether this character has a corporation
      * @return bool
      */
-    public function hasCorporation() : bool {
+    public function hasCorporation(): bool{
         return is_object($this->corporationId);
     }
 
@@ -491,14 +493,14 @@ class CharacterModel extends AbstractPathfinderModel {
      * check whether this character has an alliance
      * @return bool
      */
-    public function hasAlliance() : bool {
+    public function hasAlliance(): bool{
         return is_object($this->allianceId);
     }
 
     /**
      * @return UserModel|null
      */
-    public function getUser() : ?UserModel {
+    public function getUser(): ?UserModel{
         return $this->hasUserCharacter() ? $this->userCharacter->userId : null;
     }
 
@@ -506,7 +508,7 @@ class CharacterModel extends AbstractPathfinderModel {
      * get the corporation from character
      * @return CorporationModel|null
      */
-    public function getCorporation() : ?CorporationModel {
+    public function getCorporation(): ?CorporationModel{
         return $this->corporationId;
     }
 
@@ -514,7 +516,7 @@ class CharacterModel extends AbstractPathfinderModel {
      * get the alliance from character
      * @return AllianceModel|null
      */
-    public function getAlliance() : ?AllianceModel {
+    public function getAlliance(): ?AllianceModel{
         return $this->allianceId;
     }
 
@@ -526,14 +528,14 @@ class CharacterModel extends AbstractPathfinderModel {
         $accessToken = false;
         $refreshToken = true;
 
-        try{
+        try {
             $timezone = self::getF3()->get('getTimeZone')();
             $now = new \DateTime('now', $timezone);
 
-            if(
+            if (
                 !empty($this->esiAccessToken) &&
                 !empty($this->esiAccessTokenExpires)
-            ){
+            ) {
                 $expireTime = \DateTime::createFromFormat(
                     'Y-m-d H:i:s',
                     $this->esiAccessTokenExpires,
@@ -541,7 +543,7 @@ class CharacterModel extends AbstractPathfinderModel {
                 );
 
                 // check if token is not expired
-                if($expireTime->getTimestamp() > $now->getTimestamp()){
+                if ($expireTime->getTimestamp() > $now->getTimestamp()) {
                     // token still valid
                     $accessToken = $this->esiAccessToken;
 
@@ -549,13 +551,13 @@ class CharacterModel extends AbstractPathfinderModel {
                     $timeBuffer = 2 * 60;
                     $expireTime->sub(new \DateInterval('PT' . $timeBuffer . 'S'));
 
-                    if($expireTime->getTimestamp() > $now->getTimestamp()){
+                    if ($expireTime->getTimestamp() > $now->getTimestamp()) {
                         // token NOT close to expire
                         $refreshToken = false;
                     }
                 }
             }
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             self::getF3()->error(500, $e->getMessage(), $e->getTrace());
         }
 
@@ -563,14 +565,14 @@ class CharacterModel extends AbstractPathfinderModel {
         // existing token is close to expire
         // -> get a fresh one by an existing "refreshToken"
         // -> in case request for new token fails (e.g. timeout) and old token is still valid -> keep old token
-        if(
+        if (
             $refreshToken &&
             !empty($this->esiRefreshToken)
-        ){
+        ) {
             $ssoController = new Sso();
-            $accessData =  $ssoController->refreshAccessToken($this->esiRefreshToken);
+            $accessData = $ssoController->refreshAccessToken($this->esiRefreshToken);
 
-            if(isset($accessData->accessToken, $accessData->esiAccessTokenExpires, $accessData->refreshToken)){
+            if (isset($accessData->accessToken, $accessData->esiAccessTokenExpires, $accessData->refreshToken)) {
                 $this->esiAccessToken = $accessData->accessToken;
                 $this->esiAccessTokenExpires = $accessData->esiAccessTokenExpires;
                 $this->save();
@@ -586,15 +588,15 @@ class CharacterModel extends AbstractPathfinderModel {
      * check if character  is currently kicked
      * @return bool
      */
-    public function isKicked() : bool {
+    public function isKicked(): bool{
         $kicked = false;
-        if( !is_null($this->kicked) ){
-            try{
+        if (!is_null($this->kicked)) {
+            try {
                 $kickedUntil = new \DateTime();
-                $kickedUntil->setTimestamp( (int)strtotime($this->kicked) );
+                $kickedUntil->setTimestamp((int)strtotime($this->kicked));
                 $now = new \DateTime();
                 $kicked = ($kickedUntil > $now);
-            }catch(\Exception $e){
+            } catch (\Exception $e) {
                 self::getF3()->error(500, $e->getMessage(), $e->getTrace());
             }
         }
@@ -606,25 +608,25 @@ class CharacterModel extends AbstractPathfinderModel {
      * checks whether this character is currently logged in
      * @return bool
      */
-    public function checkLoginTimer() : bool {
+    public function checkLoginTimer(): bool{
         $loginCheck = false;
 
-        if( !$this->dry() && $this->lastLogin ){
+        if (!$this->dry() && $this->lastLogin) {
             // get max login time (minutes) from config
             $maxLoginMinutes = (int)Config::getPathfinderData('timer.logged');
-            if($maxLoginMinutes){
+            if ($maxLoginMinutes) {
                 $timezone = self::getF3()->get('getTimeZone')();
-                try{
+                try {
                     $now = new \DateTime('now', $timezone);
                     $logoutTime = new \DateTime($this->lastLogin, $timezone);
                     $logoutTime->add(new \DateInterval('PT' . $maxLoginMinutes . 'M'));
-                    if($logoutTime->getTimestamp() > $now->getTimestamp()){
+                    if ($logoutTime->getTimestamp() > $now->getTimestamp()) {
                         $loginCheck = true;
                     }
-                }catch(\Exception $e){
+                } catch (\Exception $e) {
                     self::getF3()->error(500, $e->getMessage(), $e->getTrace());
                 }
-            }else{
+            } else {
                 // no "max login" timer configured -> character still logged in
                 $loginCheck = true;
             }
@@ -638,71 +640,71 @@ class CharacterModel extends AbstractPathfinderModel {
      * -> check corp/ally whitelist config (pathfinder.ini)
      * @return string
      */
-    public function isAuthorized() : string {
+    public function isAuthorized(): string{
         $authStatus = 'UNKNOWN';
 
         // check whether character is banned or temp kicked
-        if(is_null($this->banned)){
-            if( !$this->isKicked() ){
-                $whitelistCharacter = array_filter( array_map('trim', (array)Config::getPathfinderData('login.character') ) );
-                $whitelistCorporations = array_filter( array_map('trim', (array)Config::getPathfinderData('login.corporation') ) );
-                $whitelistAlliance = array_filter( array_map('trim', (array)Config::getPathfinderData('login.alliance') ) );
+        if (is_null($this->banned)) {
+            if (!$this->isKicked()) {
+                $whitelistCharacter = array_filter(array_map('trim', (array)Config::getPathfinderData('login.character')));
+                $whitelistCorporations = array_filter(array_map('trim', (array)Config::getPathfinderData('login.corporation')));
+                $whitelistAlliance = array_filter(array_map('trim', (array)Config::getPathfinderData('login.alliance')));
 
-                if(
+                if (
                     empty($whitelistCharacter) &&
                     empty($whitelistCorporations) &&
                     empty($whitelistAlliance)
-                ){
+                ) {
                     // no corp/ally restrictions set -> any character is allowed to login
                     $authStatus = 'OK';
-                }elseif(
+                } elseif (
                     // check if session_sharing is enabled and if a character is saved in session
                     Config::getPathfinderData('login.session_sharing') === 1 &&
                     is_array($this->getF3()->get(User::SESSION_KEY_CHARACTERS))
-                ){
+                ) {
                     // authorized character is already logged in -> any subsequent character is allowed to login
                     $authStatus = 'OK';
-                }else{
+                } else {
                     // check if character is set in whitelist
-                    if(
+                    if (
                         !empty($whitelistCharacter) &&
                         in_array((int)$this->_id, $whitelistCharacter)
-                    ){
-                        $authStatus =  'OK';
-                    }else{
+                    ) {
+                        $authStatus = 'OK';
+                    } else {
                         $authStatus = 'CHARACTER';
                     }
 
                     // check if character corporation is set in whitelist
-                    if(
+                    if (
                         $authStatus != 'OK' &&
                         !empty($whitelistCorporations) &&
                         $this->hasCorporation()
-                    ){
-                        if( in_array((int)$this->get('corporationId', true), $whitelistCorporations) ){
+                    ) {
+                        if (in_array((int)$this->get('corporationId', true), $whitelistCorporations)) {
                             $authStatus = 'OK';
-                        }else{
+                        } else {
                             $authStatus = 'CORPORATION';
                         }
                     }
 
                     // check if character alliance is set in whitelist
-                    if(
+                    if (
                         $authStatus != 'OK' &&
                         !empty($whitelistAlliance) &&
                         $this->hasAlliance()
-                    ){
-                        if( in_array((int)$this->get('allianceId', true), $whitelistAlliance) ){
-                            $authStatus =  'OK';
-                        }else{
+                    ) {
+                        if (in_array((int)$this->get('allianceId', true), $whitelistAlliance)) {
+                            $authStatus = 'OK';
+                        } else {
                             $authStatus = 'ALLIANCE';
                         }
                     }
                 }
-            }else{
+            } else {
                 $authStatus = 'KICKED';
             }
-        }else{
+        } else {
             $authStatus = 'BANNED';
         }
 
@@ -714,14 +716,14 @@ class CharacterModel extends AbstractPathfinderModel {
      * @return RoleModel
      * @throws \Exception
      */
-    protected function getRole() : RoleModel {
+    protected function getRole(): RoleModel{
         $role = null;
 
         // check config files for hardcoded character roles
-        if(self::getF3()->exists('PATHFINDER.ROLES.CHARACTER', $globalAdminData)){
-            foreach((array)$globalAdminData as $adminData){
-                if($adminData['ID'] === $this->_id){
-                    switch($adminData['ROLE']){
+        if (self::getF3()->exists('PATHFINDER.ROLES.CHARACTER', $globalAdminData)) {
+            foreach ((array)$globalAdminData as $adminData) {
+                if ($adminData['ID'] === $this->_id) {
+                    switch ($adminData['ROLE']) {
                         case 'SUPER':
                             $role = RoleModel::getAdminRole();
                             break;
@@ -735,20 +737,20 @@ class CharacterModel extends AbstractPathfinderModel {
         }
 
         // check in-game roles
-        if(
+        if (
             is_null($role) &&
             !empty($rolesData = $this->requestRoles()) &&
             !empty($roles = $rolesData['roles'])
-        ){
+        ) {
             // roles that grant admin access for this character
             $adminRoles = array_intersect(CorporationModel::ADMIN_ROLES, $roles);
-            if(!empty($adminRoles)){
+            if (!empty($adminRoles)) {
                 $role = RoleModel::getCorporationManagerRole();
             }
         }
 
         // default role
-        if(is_null($role)){
+        if (is_null($role)) {
             $role = RoleModel::getDefaultRole();
         }
 
@@ -760,10 +762,10 @@ class CharacterModel extends AbstractPathfinderModel {
      * -> 'role types' are 'roles', 'rolesAtBase', 'rolesAtHq', 'rolesAtOther'
      * @return array
      */
-    protected function requestRoles() : array {
+    protected function requestRoles(): array{
         $rolesData = [];
         $response = self::getF3()->ccpClient()->send('getCharacterRoles', $this->_id, $this->getAccessToken());
-        if(!empty($response) && !isset($response['error'])){
+        if (!empty($response) && !isset($response['error'])) {
             $rolesData = $response;
         }
         return $rolesData;
@@ -773,7 +775,7 @@ class CharacterModel extends AbstractPathfinderModel {
      * check whether this char has accepted all "basic" api scopes
      * @return bool
      */
-    public function hasBasicScopes() : bool {
+    public function hasBasicScopes(): bool{
         return empty(array_diff(Sso::getScopesByAuthType(), $this->esiScopes));
     }
 
@@ -781,7 +783,7 @@ class CharacterModel extends AbstractPathfinderModel {
      * check whether this char has accepted all admin api scopes
      * @return bool
      */
-    public function hasAdminScopes() : bool {
+    public function hasAdminScopes(): bool{
         return empty(array_diff(Sso::getScopesByAuthType('admin'), $this->esiScopes));
     }
 
@@ -789,10 +791,10 @@ class CharacterModel extends AbstractPathfinderModel {
      * update clone data
      */
     public function updateCloneData(){
-        if($accessToken = $this->getAccessToken()){
+        if ($accessToken = $this->getAccessToken()) {
             $clonesData = self::getF3()->ccpClient()->send('getCharacterClones', $this->_id, $accessToken);
-            if(!isset($clonesData['error'])){
-                if(!empty($homeLocationData = $clonesData['home']['location'])){
+            if (!isset($clonesData['error'])) {
+                if (!empty($homeLocationData = $clonesData['home']['location'])) {
                     // clone home location data
                     $this->cloneLocationId = (int)$homeLocationData['id'];
                     $this->cloneLocationType = (string)$homeLocationData['type'];
@@ -813,7 +815,7 @@ class CharacterModel extends AbstractPathfinderModel {
      * @param string $accessToken
      * @return array
      */
-    protected function getOnlineData(string $accessToken) : array {
+    protected function getOnlineData(string $accessToken): array{
         return self::getF3()->ccpClient()->send('getCharacterOnline', $this->_id, $accessToken);
     }
 
@@ -822,11 +824,11 @@ class CharacterModel extends AbstractPathfinderModel {
      * @param string $accessToken
      * @return bool
      */
-    public function isOnline(string $accessToken) : bool {
+    public function isOnline(string $accessToken): bool{
         $isOnline = false;
         $onlineData = $this->getOnlineData($accessToken);
 
-        if($onlineData['online'] === true){
+        if ($onlineData['online'] === true) {
             $isOnline = true;
         }
 
@@ -840,26 +842,26 @@ class CharacterModel extends AbstractPathfinderModel {
      * @return CharacterModel
      * @throws \Exception
      */
-    public function updateLog($additionalOptions = []) : self {
+    public function updateLog($additionalOptions = []): self{
         $deleteLog = false;
         $invalidResponse = false;
 
         //check if log update is enabled for this character
         // check if character has accepted all scopes. (This fkt is called by cron as well)
-        if(
+        if (
             $this->logLocation &&
             $this->hasBasicScopes()
-        ){
+        ) {
             // Try to pull data from API
-            if($accessToken = $this->getAccessToken()){
-                if($this->isOnline($accessToken)){
+            if ($accessToken = $this->getAccessToken()) {
+                if ($this->isOnline($accessToken)) {
                     $locationData = self::getF3()->ccpClient()->send('getCharacterLocation', $this->_id, $accessToken);
 
-                    if(!empty($locationData['system']['id'])){
+                    if (!empty($locationData['system']['id'])) {
                         // character is currently in-game
 
                         // get current $characterLog or get new -------------------------------------------------------
-                        if(!$characterLog = $this->getLog()){
+                        if (!$characterLog = $this->getLog()) {
                             // create new log
                             $characterLog = $this->rel('characterLog');
                         }
@@ -871,10 +873,10 @@ class CharacterModel extends AbstractPathfinderModel {
 
                         // IDs for "systemId", "stationId" that require more data
                         $lookupUniverseIds = [];
-                        if(
+                        if (
                             empty($logData['system']['name']) ||
                             $logData['system']['id'] !== $locationData['system']['id']
-                        ){
+                        ) {
                             // system changed -> request "system name" for current system
                             $lookupUniverseIds[] = $locationData['system']['id'];
                         }
@@ -882,132 +884,133 @@ class CharacterModel extends AbstractPathfinderModel {
                         $logData = array_replace_recursive($logData, $locationData);
 
                         // get "more" data for systemId ---------------------------------------------------------------
-                        if(!empty($lookupUniverseIds)){
+                        if (!empty($lookupUniverseIds)) {
                             // get "more" information for some Ids (e.g. name)
                             $universeData = self::getF3()->ccpClient()->send('getUniverseNames', $lookupUniverseIds);
 
-                            if(!empty($universeData) && !isset($universeData['error'])){
+                            if (!empty($universeData) && !isset($universeData['error'])) {
                                 // We expect max ONE system AND/OR station data, not an array of e.g. systems
-                                if(!empty($universeData['system'])){
+                                if (!empty($universeData['system'])) {
                                     $universeData['system'] = reset($universeData['system']);
                                 }
 
                                 $logData = array_replace_recursive($logData, $universeData);
-                            }else{
+                            } else {
                                 // this is important! universe data is a MUST HAVE!
                                 $deleteLog = true;
                             }
                         }
 
                         // check station data for changes -------------------------------------------------------------
-                        if(!$deleteLog){
+                        if (!$deleteLog) {
                             // IDs for "stationId" that require more data
                             $lookupStationId = 0;
-                            if(!empty($locationData['station']['id'])){
-                                if(
+                            if (!empty($locationData['station']['id'])) {
+                                if (
                                     empty($logData['station']['name']) ||
-                                    $logData['station']['id']  !== $locationData['station']['id']
-                                ){
+                                    $logData['station']['id'] !== $locationData['station']['id']
+                                ) {
                                     // station changed -> request station data
                                     $lookupStationId = $locationData['station']['id'];
                                 }
-                            }else{
+                            } else {
                                 unset($logData['station']);
                             }
 
                             // get "more" data for stationId
-                            if($lookupStationId > 0){
+                            if ($lookupStationId > 0) {
                                 /**
                                  * @var $stationModel Universe\StationModel
                                  */
                                 $stationModel = Universe\AbstractUniverseModel::getNew('StationModel');
                                 $stationModel->loadById($lookupStationId, $accessToken, $additionalOptions);
-                                if($stationModel->valid()){
+                                if ($stationModel->valid()) {
                                     $stationData['station'] = $stationModel::toArray($stationModel->getData());
                                     $logData = array_replace_recursive($logData, $stationData);
-                                }else{
+                                } else {
                                     unset($logData['station']);
                                 }
                             }
                         }
 
                         // check structure data for changes -----------------------------------------------------------
-                        if(!$deleteLog){
+                        if (!$deleteLog) {
                             // IDs for "structureId" that require more data
                             $lookupStructureId = 0;
-                            if(!empty($locationData['structure']['id'])){
-                                if(
+                            if (!empty($locationData['structure']['id'])) {
+                                if (
                                     empty($logData['structure']['name']) ||
-                                    $logData['structure']['id']  !== $locationData['structure']['id']
-                                ){
+                                    $logData['structure']['id'] !== $locationData['structure']['id']
+                                ) {
                                     // structure changed -> request structure data
                                     $lookupStructureId = $locationData['structure']['id'];
                                 }
-                            }else{
+                            } else {
                                 unset($logData['structure']);
                             }
 
                             // get "more" data for structureId
-                            if($lookupStructureId > 0){
+                            if ($lookupStructureId > 0) {
                                 /**
                                  * @var $structureModel Universe\StructureModel
                                  */
                                 $structureModel = Universe\AbstractUniverseModel::getNew('StructureModel');
                                 $structureModel->loadById($lookupStructureId, $accessToken, $additionalOptions);
-                                if($structureModel->valid()){
+                                if ($structureModel->valid()) {
                                     $structureData['structure'] = $structureModel::toArray($structureModel->getData());
                                     $logData = array_replace_recursive($logData, $structureData);
-                                }else{
+                                } else {
                                     unset($logData['structure']);
                                 }
                             }
                         }
 
                         // check ship data for changes ----------------------------------------------------------------
-                        if(!$deleteLog){
+                        if (!$deleteLog) {
                             $shipData = self::getF3()->ccpClient()->send('getCharacterShip', $this->_id, $accessToken);
 
                             // IDs for "shipTypeId" that require more data
                             $lookupShipTypeId = 0;
-                            if(!empty($shipData['ship']['typeId'])){
-                                if(
+                            if (!empty($shipData['ship']['typeId'])) {
+                                if (
                                     empty($logData['ship']['typeName']) ||
                                     $logData['ship']['typeId'] !== $shipData['ship']['typeId']
-                                ){
+                                ) {
                                     // ship changed -> request "station name" for current station
                                     $lookupShipTypeId = $shipData['ship']['typeId'];
                                 }
 
                                 // "shipName"/"shipId" could have changed...
                                 $logData = array_replace_recursive($logData, $shipData);
-                            }else{
+                            } else {
                                 // ship data should never be empty -> keep current one
                                 //unset($logData['ship']);
                                 $invalidResponse = true;
                             }
 
                             // get "more" data for shipTypeId
-                            if($lookupShipTypeId > 0){
+                            if ($lookupShipTypeId > 0) {
                                 /**
                                  * @var $typeModel Universe\TypeModel
                                  */
                                 $typeModel = Universe\AbstractUniverseModel::getNew('TypeModel');
                                 $typeModel->loadById($lookupShipTypeId, '', $additionalOptions);
-                                if(!$typeModel->dry()){
+                                if (!$typeModel->dry()) {
                                     $shipData['ship'] = (array)$typeModel->getShipData();
                                     $logData = array_replace_recursive($logData, $shipData);
-                                }else{
+                                } else {
                                     // this is important! ship data is a MUST HAVE!
                                     $deleteLog = true;
                                 }
                             }
                         }
 
-                        if(!$deleteLog){
+                        if (!$deleteLog) {
                             // mark log as "updated" even if no changes were made
-                            if($additionalOptions['markUpdated'] === true){
+                            if ($additionalOptions['markUpdated'] === true) {
                                 $characterLog->touch('updated');
                             }
+
 
                             $characterLog->setData($logData);
                             $characterLog->characterId = $this->_id;
@@ -1015,24 +1018,24 @@ class CharacterModel extends AbstractPathfinderModel {
 
                             $this->characterLog = $characterLog;
                         }
-                    }else{
+                    } else {
                         // systemId should always exists
                         $invalidResponse = true;
                     }
-                }else{
+                } else {
                     // user is in-game offline
                     $deleteLog = true;
                 }
-            }else{
+            } else {
                 // access token request failed
                 $deleteLog = true;
             }
-        }else{
+        } else {
             // character deactivated location logging
             $deleteLog = true;
         }
 
-        if($deleteLog){
+        if ($deleteLog) {
             $this->deleteLog();
         }
 
@@ -1045,13 +1048,13 @@ class CharacterModel extends AbstractPathfinderModel {
      * @param int $systemIdPrev
      * @return array
      */
-    protected function getLogHistoryJumps(int $systemIdPrev =  0) : array {
-        return $this->filterLogsHistory(function(array $historyEntry) use (&$systemIdPrev) : bool {
+    protected function getLogHistoryJumps(int $systemIdPrev = 0): array{
+        return $this->filterLogsHistory(function(array $historyEntry) use (&$systemIdPrev): bool{
             $addEntry = false;
-            if(
+            if (
                 !empty($historySystemId = (int)$historyEntry['log']['system']['id']) &&
                 $historySystemId !== $systemIdPrev
-            ){
+            ) {
                 $addEntry = true;
                 $systemIdPrev = $historySystemId;
             }
@@ -1066,15 +1069,15 @@ class CharacterModel extends AbstractPathfinderModel {
      * @param \Closure $callback
      * @return array
      */
-    protected function filterLogsHistory(\Closure $callback) : array {
-        return array_values(array_filter($this->getLogsHistory() , $callback));
+    protected function filterLogsHistory(\Closure $callback): array{
+        return array_values(array_filter($this->getLogsHistory(), $callback));
     }
 
     /**
      * @return array
      */
-    public function getLogsHistory() : array {
-        if(!is_array($logHistoryData = $this->getCacheData(self::DATA_CACHE_KEY_LOG_HISTORY))){
+    public function getLogsHistory(): array{
+        if (!is_array($logHistoryData = $this->getCacheData(self::DATA_CACHE_KEY_LOG_HISTORY))) {
             $logHistoryData = [];
         }
         return $logHistoryData;
@@ -1085,25 +1088,25 @@ class CharacterModel extends AbstractPathfinderModel {
      * @param CharacterLogModel $characterLog
      * @param string $action
      */
-    public function updateLogsHistory(CharacterLogModel $characterLog, string $action = 'update') : void {
-        if(
+    public function updateLogsHistory(CharacterLogModel $characterLog, string $action = 'update'): void{
+        if (
             $this->valid() &&
             $this->_id === $characterLog->get('characterId', true)
-        ){
+        ) {
             $task = 'add';
             $mapIds = [];
             $historyLog = $characterLog::toArray($characterLog->getData());
 
-            if($logHistoryData = $this->getLogsHistory()){
+            if ($logHistoryData = $this->getLogsHistory()) {
                 // skip logging if no relevant fields changed
                 [$historyEntryPrev] = $logHistoryData;
-                if($historyLogPrev = $historyEntryPrev['log']){
-                    if(
-                        $historyLog['system']['id']     === $historyLogPrev['system']['id'] &&
-                        $historyLog['ship']['typeId']   === $historyLogPrev['ship']['typeId'] &&
-                        $historyLog['station']['id']    === $historyLogPrev['station']['id'] &&
-                        $historyLog['structure']['id']  === $historyLogPrev['structure']['id']
-                    ){
+                if ($historyLogPrev = $historyEntryPrev['log']) {
+                    if (
+                        $historyLog['system']['id'] === $historyLogPrev['system']['id'] &&
+                        $historyLog['ship']['typeId'] === $historyLogPrev['ship']['typeId'] &&
+                        $historyLog['station']['id'] === $historyLogPrev['station']['id'] &&
+                        $historyLog['structure']['id'] === $historyLogPrev['structure']['id']
+                    ) {
                         // no changes in 'relevant' fields -> just update timestamp
                         $task = 'update';
                         $mapIds = (array)$historyEntryPrev['mapIds'];
@@ -1112,15 +1115,15 @@ class CharacterModel extends AbstractPathfinderModel {
             }
 
             $historyEntry = [
-                'stamp'     => strtotime($characterLog->updated),
-                'action'    => $action,
-                'mapIds'    => $mapIds,
-                'log'       => $historyLog
+                'stamp' => strtotime($characterLog->updated),
+                'action' => $action,
+                'mapIds' => $mapIds,
+                'log' => $historyLog
             ];
 
-            if($task == 'update'){
+            if ($task == 'update') {
                 $logHistoryData[0] = $historyEntry;
-            }else{
+            } else {
                 array_unshift($logHistoryData, $historyEntry);
 
                 // limit max history data
@@ -1137,15 +1140,15 @@ class CharacterModel extends AbstractPathfinderModel {
      * @param array $historyEntry
      * @return bool
      */
-    protected function updateLogHistoryEntry(array $historyEntry) : bool {
+    protected function updateLogHistoryEntry(array $historyEntry): bool{
         $updated = false;
 
-        if(
+        if (
             $this->valid() &&
             ($logHistoryData = $this->getLogsHistory())
-        ){
-            $map = function(array $entry) use ($historyEntry, &$updated) : array {
-                if($entry['stamp'] === $historyEntry['stamp']){
+        ) {
+            $map = function(array $entry) use ($historyEntry, &$updated): array{
+                if ($entry['stamp'] === $historyEntry['stamp']) {
                     $updated = true;
                     $entry = $historyEntry;
                 }
@@ -1154,7 +1157,7 @@ class CharacterModel extends AbstractPathfinderModel {
 
             $logHistoryData = array_map($map, $logHistoryData);
 
-            if($updated){
+            if ($updated) {
                 $this->updateCacheData($logHistoryData, self::DATA_CACHE_KEY_LOG_HISTORY, self::TTL_LOG_HISTORY);
             }
         }
@@ -1176,21 +1179,21 @@ class CharacterModel extends AbstractPathfinderModel {
      * @return array (some status messages)
      * @throws \Exception
      */
-    public function updateFromESI() : array {
+    public function updateFromESI(): array{
         $status = [];
 
-        if( $accessToken = $this->getAccessToken() ){
+        if ($accessToken = $this->getAccessToken()) {
             // et basic character data
             // -> this is required for "ownerHash" hash check (e.g. character was sold,..)
             // -> the "id" check is just for security and should NEVER fail!
             $ssoController = new Sso();
-            if(
-                !empty( $verificationCharacterData = $ssoController->verifyCharacterData($accessToken) ) &&
+            if (
+                !empty($verificationCharacterData = $ssoController->verifyCharacterData($accessToken)) &&
                 $verificationCharacterData->characterId === $this->_id
-            ){
+            ) {
                 // get character data from API
                 $characterData = $ssoController->getCharacterData($this->_id);
-                if( !empty($characterData->character) ){
+                if (!empty($characterData->character)) {
                     $characterData->character['ownerHash'] = $verificationCharacterData->owner;
                     $characterData->character['esiScopes'] = $verificationCharacterData->scp;
 
@@ -1199,10 +1202,10 @@ class CharacterModel extends AbstractPathfinderModel {
                     $this->allianceId = $characterData->alliance;
                     $this->save();
                 }
-            }else{
+            } else {
                 $status[] = sprintf(Sso::ERROR_VERIFY_CHARACTER, $this->name);
             }
-        }else{
+        } else {
             $status[] = sprintf(Sso::ERROR_ACCESS_TOKEN, $this->name);
         }
 
@@ -1215,7 +1218,7 @@ class CharacterModel extends AbstractPathfinderModel {
      * -> but is should be unique
      * @return string
      */
-    public function getCookieName() : string {
+    public function getCookieName(): string{
         return md5($this->name);
     }
 
@@ -1223,7 +1226,7 @@ class CharacterModel extends AbstractPathfinderModel {
      * get the character log entry for this character
      * @return CharacterLogModel|null
      */
-    public function getLog() : ?CharacterLogModel {
+    public function getLog(): ?CharacterLogModel{
         return ($this->hasLog() && !$this->characterLog->dry()) ? $this->characterLog : null;
     }
 
@@ -1234,23 +1237,23 @@ class CharacterModel extends AbstractPathfinderModel {
      * @param int $systemId
      * @return CharacterLogModel|null
      */
-    public function getLogPrevSystem(int $mapId, int $systemId) : ?CharacterLogModel {
+    public function getLogPrevSystem(int $mapId, int $systemId): ?CharacterLogModel{
         $characterLog = null;
 
-        if($mapId && $systemId){
+        if ($mapId && $systemId) {
             $skipRest = false;
-            $logHistoryData = $this->filterLogsHistory(function(array $historyEntry) use ($mapId, $systemId, &$skipRest) : bool {
+            $logHistoryData = $this->filterLogsHistory(function(array $historyEntry) use ($mapId, $systemId, &$skipRest): bool{
                 $addEntry = false;
                 //if(in_array($mapId, (array)$historyEntry['mapIds'], true)){   // $historyEntry is checked by EACH map -> would auto add system on map switch! #827
-                if(!empty((array)$historyEntry['mapIds'])){                     // if $historyEntry was already checked by ANY other map -> no further checks
+                if (!empty((array)$historyEntry['mapIds'])) {                     // if $historyEntry was already checked by ANY other map -> no further checks
                     $skipRest = true;
                 }
 
-                if(
+                if (
                     !$skipRest &&
                     !empty($historySystemId = (int)$historyEntry['log']['system']['id']) &&
                     $historySystemId !== $systemId
-                ){
+                ) {
                     $addEntry = true;
                     $skipRest = true;
                 }
@@ -1258,10 +1261,10 @@ class CharacterModel extends AbstractPathfinderModel {
                 return $addEntry;
             });
 
-            if(
+            if (
                 !empty($historyEntry = reset($logHistoryData)) &&
                 is_array($historyEntry['mapIds'])
-            ){
+            ) {
                 /**
                  * @var $characterLog CharacterLogModel
                  */
@@ -1284,7 +1287,7 @@ class CharacterModel extends AbstractPathfinderModel {
      * @return MapModel|null
      * @throws \Exception
      */
-    public function getMap(int $mapId) : ?MapModel {
+    public function getMap(int $mapId): ?MapModel{
         /**
          * @var $map MapModel
          */
@@ -1298,27 +1301,27 @@ class CharacterModel extends AbstractPathfinderModel {
      * get all accessible map models for this character
      * @return MapModel[]
      */
-    public function getMaps() : array {
-        if(Config::getPathfinderData('login.session_sharing') === 1){
+    public function getMaps(): array{
+        if (Config::getPathfinderData('login.session_sharing') === 1) {
             $maps = $this->getSessionCharacterMaps();
-        }else{
+        } else {
             $maps = [];
 
-            if($alliance = $this->getAlliance()){
+            if ($alliance = $this->getAlliance()) {
                 $maps = array_merge($maps, $alliance->getMaps());
             }
 
-            if($corporation = $this->getCorporation()){
-                $maps = array_merge($maps,  $corporation->getMaps());
+            if ($corporation = $this->getCorporation()) {
+                $maps = array_merge($maps, $corporation->getMaps());
             }
 
-            if(is_object($this->characterMaps)){
+            if (is_object($this->characterMaps)) {
                 $mapCountPrivate = 0;
-                foreach($this->characterMaps as $characterMap){
-                    if(
+                foreach ($this->characterMaps as $characterMap) {
+                    if (
                         $mapCountPrivate < Config::getMapsDefaultConfig('private')['max_count'] &&
                         $characterMap->mapId->isActive()
-                    ){
+                    ) {
                         $maps[] = $characterMap->mapId;
                         $mapCountPrivate++;
                     }
@@ -1329,41 +1332,41 @@ class CharacterModel extends AbstractPathfinderModel {
         return $maps;
     }
 
-    /** 
+    /**
      * get all accessible map models for all characters in session
      * using mapIds and characters index arrays to track what has already been processed
      * @return MapModel[]
      */
-    public function getSessionCharacterMaps() : array {
+    public function getSessionCharacterMaps(): array{
         $maps = ["maps" => [], "mapIds" => []];
-        
+
         // get all characters in session and iterate over them
-        foreach($this->getAll(array_column($this->getF3()->get(User::SESSION_KEY_CHARACTERS), 'ID')) as $character){            
-            if($alliance = $character->getAlliance()){
-                foreach($alliance->getMaps() as $map){
-                    if(!in_array($map->_id, $maps["mapIds"])){
+        foreach ($this->getAll(array_column($this->getF3()->get(User::SESSION_KEY_CHARACTERS), 'ID')) as $character) {
+            if ($alliance = $character->getAlliance()) {
+                foreach ($alliance->getMaps() as $map) {
+                    if (!in_array($map->_id, $maps["mapIds"])) {
                         array_push($maps["maps"], $map);
                         array_push($maps["mapIds"], $map->id);
                     }
                 }
             }
 
-            if($corporation = $character->getCorporation()){
-                foreach($corporation->getMaps() as $map){
-                    if(!in_array($map->_id, $maps["mapIds"])){
+            if ($corporation = $character->getCorporation()) {
+                foreach ($corporation->getMaps() as $map) {
+                    if (!in_array($map->_id, $maps["mapIds"])) {
                         array_push($maps["maps"], $map);
                         array_push($maps["mapIds"], $map->id);
                     }
                 }
             }
 
-            if(is_object($character->characterMaps)){
+            if (is_object($character->characterMaps)) {
                 $mapCountPrivate = 0;
-                foreach($character->characterMaps as $characterMap){
-                    if(
+                foreach ($character->characterMaps as $characterMap) {
+                    if (
                         $mapCountPrivate < Config::getMapsDefaultConfig('private')['max_count'] &&
                         $characterMap->mapId->isActive()
-                    ){
+                    ) {
                         array_push($maps["maps"], $characterMap->mapId);
                         $mapCountPrivate++;
                     }
@@ -1378,7 +1381,7 @@ class CharacterModel extends AbstractPathfinderModel {
      * delete current location
      */
     protected function deleteLog(){
-        if($characterLog = $this->getLog()){
+        if ($characterLog = $this->getLog()) {
             $characterLog->erase();
         }
     }
@@ -1387,8 +1390,8 @@ class CharacterModel extends AbstractPathfinderModel {
      * delete authentications data
      */
     protected function deleteAuthentications(){
-        if(is_object($this->characterAuthentications)){
-            foreach($this->characterAuthentications as $characterAuthentication){
+        if (is_object($this->characterAuthentications)) {
+            foreach ($this->characterAuthentications as $characterAuthentication) {
                 /**
                  * @var $characterAuthentication CharacterAuthenticationModel
                  */
@@ -1396,6 +1399,7 @@ class CharacterModel extends AbstractPathfinderModel {
             }
         }
     }
+
     /**
      * character logout
      * @param bool $deleteLog
@@ -1404,29 +1408,29 @@ class CharacterModel extends AbstractPathfinderModel {
      */
     public function logout(bool $deleteSession = true, bool $deleteLog = true, bool $deleteCookie = false){
         // delete current session data --------------------------------------------------------------------------------
-        if($deleteSession){
+        if ($deleteSession) {
             $sessionCharacterData = (array)$this->getF3()->get(User::SESSION_KEY_CHARACTERS);
             $sessionCharacterData = array_filter($sessionCharacterData, function($data){
                 return ($data['ID'] != $this->_id);
             });
 
-            if(empty($sessionCharacterData)){
+            if (empty($sessionCharacterData)) {
                 // no active characters logged in -> log user out
                 $this->getF3()->clear(User::SESSION_KEY_USER);
                 $this->getF3()->clear(User::SESSION_KEY_CHARACTERS);
-            }else{
+            } else {
                 // update remaining active characters
                 $this->getF3()->set(User::SESSION_KEY_CHARACTERS, $sessionCharacterData);
             }
         }
 
         // delete current location data -------------------------------------------------------------------------------
-        if($deleteLog){
+        if ($deleteLog) {
             $this->deleteLog();
         }
 
         // delete auth cookie data ------------------------------------------------------------------------------------
-        if($deleteCookie){
+        if ($deleteCookie) {
             $this->deleteAuthentications();
         }
     }
@@ -1434,7 +1438,7 @@ class CharacterModel extends AbstractPathfinderModel {
     /**
      * @see parent
      */
-    public function filterRel() : void {
+    public function filterRel(): void{
         $this->filter('userCharacter', self::getFilter('active', true));
         $this->filter('corporationId', self::getFilter('active', true));
         $this->filter('allianceId', self::getFilter('active', true));
@@ -1446,18 +1450,18 @@ class CharacterModel extends AbstractPathfinderModel {
      * @param array $characterDataBase
      * @return array
      */
-    public static function mergeSessionCharacterData(array $characterDataBase = []) : array {
+    public static function mergeSessionCharacterData(array $characterDataBase = []): array{
         $addData = [];
         // get current session characters to be merged with
         $characterData = (array)self::getF3()->get(User::SESSION_KEY_CHARACTERS);
 
-        foreach($characterDataBase as $i => $baseData){
-            foreach($characterData as $data){
-                if((int)$baseData['ID'] === (int)$data['ID']){
+        foreach ($characterDataBase as $i => $baseData) {
+            foreach ($characterData as $data) {
+                if ((int)$baseData['ID'] === (int)$data['ID']) {
                     // overwrite static data -> should NEVER change on merge!
                     $characterDataBase[$i]['NAME'] = $data['NAME'];
                     $characterDataBase[$i]['TIME'] = $data['TIME'];
-                }else{
+                } else {
                     $addData[] = $data;
                 }
             }

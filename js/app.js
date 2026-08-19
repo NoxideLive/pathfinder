@@ -16,6 +16,7 @@ requirejs.config({
         dialog: 'app/ui/dialog',                                        // path     dialog files
         layout: 'app/ui/layout',                                        // path     layout files
         module: 'app/ui/module',                                        // path     module files
+        mock: 'app/mock',                                               // path     mock data files
 
         templates: '../../templates',                                   // path     template base dir
         img: '../../img',                                               // path     image base dir

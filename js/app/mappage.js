@@ -13,8 +13,9 @@ define([
     'app/map/util',
     'app/module_map',
     'app/key',
-    'app/ui/form_element'
-], ($, Init, Util, Logging, Page, Counter, MapWorker, MapUtil, ModuleMap) => {
+    'app/ui/form_element',
+    'app/mock/mockInterceptor'
+], ($, Init, Util, Logging, Page, Counter, MapWorker, MapUtil, ModuleMap, MockInterceptor) => {
     'use strict';
 
     // main update intervals/trigger (heartbeat)
@@ -581,6 +582,9 @@ define([
     // ================================================================================================================
     //  main thread -> init "map" page
     // ================================================================================================================
+    // initialize mock mode interceptor (if enabled)
+    MockInterceptor.init();
+
     // set default AJAX config
     Util.ajaxSetup();
 

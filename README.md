@@ -19,6 +19,11 @@ If you wish to contribute please join the [Pathfinder Slack](https://join.slack.
   - Join channel [pathfinder-eve-online.slack.com](https://join.slack.com/t/pathfinder-eve-online/shared_invite/enQtMzMyOTkyMjczMTA3LWI2NGE1OTY5ODBmNDZlMDY3MDIzYjk5ZTljM2JjZjIwNDRkNzMyMTEwMDUzOGQwM2E3ZjE1NGEwNThlMzYzY2Y)
   - Can´t join? pathfinder@exodus4d.de
 
+#### UI Development with Mock Mode
+For frontend development without requiring a live backend, see [MOCK_MODE.md](MOCK_MODE.md) for instructions on how to run the UI with mock data.
+
+**Quick start**: Add `?mockMode=true` to your URL to enable mock/dev mode.
+
 **Feel free to check the code for bugs and security issues.
 Issues should be reported in the [Issue](https://github.com/exodus4d/pathfinder/issues) section.**
 

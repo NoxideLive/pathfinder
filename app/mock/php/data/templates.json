@@ -1,0 +1,27 @@
+{
+  "character": {
+    "id": 123456789,
+    "name": "Mock Character",
+    "corporation": {
+      "id": 98000001,
+      "name": "Mock Corporation"
+    },
+    "alliance": {
+      "id": 99000001,
+      "name": "Mock Alliance"
+    }
+  },
+  "maps": [],
+  "serverStatus": {
+    "online": true,
+    "players": 25000,
+    "version": "mock"
+  },
+  "user": {
+    "id": 1,
+    "name": "Mock User",
+    "email": "mock@example.com"
+  },
+  "systems": [],
+  "connections": []
+}

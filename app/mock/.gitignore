@@ -1,0 +1,6 @@
+# Mock data files
+# These files contain mock data for development when MOCK_PHP_ENABLED=1
+# They should be committed to the repository for consistency
+
+# Do not ignore anything - we want these files tracked
+!*.json

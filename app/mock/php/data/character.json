@@ -1,0 +1,13 @@
+{
+  "CharacterID": 123456789,
+  "CharacterName": "Mock Character",
+  "CharacterOwnerHash": "mock_owner_hash_abc123",
+  "ExpiresOn": "2099-12-31T23:59:59",
+  "Scopes": "esi-location.read_online.v1 esi-location.read_location.v1 esi-location.read_ship_type.v1",
+  "TokenType": "Character",
+  "IntellectualProperty": "EVE",
+  "corporation_id": 98000001,
+  "corporation_name": "Mock Corporation",
+  "alliance_id": 99000001,
+  "alliance_name": "Mock Alliance"
+}

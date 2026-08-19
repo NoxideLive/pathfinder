@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  pathfinder-mock:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock
+    container_name: pathfinder-mock
+    ports:
+      - "8000:8000"
+    environment:
+      # Ensure mock mode is enabled
+      - PHP_ENV=development
+    volumes:
+      # Mount mock data for easy editing
+      - ./app/mock:/var/www/pathfinder/app/mock:ro
+      # Mount logs for debugging
+      - ./tmp/logs:/var/www/pathfinder/tmp/logs
+    restart: unless-stopped
+    networks:
+      - pathfinder-mock-network
+    labels:
+      - "com.pathfinder.mode=mock"
+      - "com.pathfinder.description=Pathfinder running in mock mode without external dependencies"
+
+networks:
+  pathfinder-mock-network:
+    driver: bridge
+    name: pathfinder-mock-net

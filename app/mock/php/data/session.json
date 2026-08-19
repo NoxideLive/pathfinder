@@ -1,0 +1,8 @@
+{
+  "character_id": 123456789,
+  "character_name": "Mock Character",
+  "logged_in": true,
+  "login_time": 1234567890,
+  "user_id": 1,
+  "session_id": "mock_session_123"
+}

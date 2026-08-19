@@ -1,0 +1,38 @@
+{
+  "tables": [
+    "sessions",
+    "character",
+    "user",
+    "map",
+    "system",
+    "connection"
+  ],
+  "row_counts": {
+    "sessions": 1,
+    "character": 1,
+    "user": 1,
+    "map": 0,
+    "system": 0,
+    "connection": 0
+  },
+  "table_status": [
+    {
+      "Name": "sessions",
+      "Engine": "InnoDB",
+      "Version": 10,
+      "Row_format": "Dynamic",
+      "Rows": 1,
+      "Avg_row_length": 16384,
+      "Data_length": 16384
+    },
+    {
+      "Name": "character",
+      "Engine": "InnoDB",
+      "Version": 10,
+      "Row_format": "Dynamic",
+      "Rows": 1,
+      "Avg_row_length": 16384,
+      "Data_length": 16384
+    }
+  ]
+}
